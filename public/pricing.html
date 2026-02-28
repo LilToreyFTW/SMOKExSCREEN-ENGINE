@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Pricing — SmokeScreen ENGINE</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#03040a;color:#f0ede8;line-height:1.6;}
+    .container{max-width:1200px;margin:0 auto;padding:40px 20px;}
+    .header{text-align:center;margin-bottom:60px;}
+    .header h1{font-size:48px;font-weight:800;letter-spacing:-1px;margin-bottom:12px;}
+    .header p{font-size:20px;color:rgba(240,237,232,0.7);}
+    .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:32px;align-items:start;}
+    .plan{background:#0b0e18;border:1px solid rgba(255,61,0,0.15);border-radius:12px;padding:32px;position:relative;}
+    .plan.popular{border-color:rgba(255,61,0,0.5);transform:scale(1.02);}
+    .plan.popular::before{content:'MOST POPULAR';position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#ff3d00;color:#fff;font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;}
+    .plan h2{font-size:24px;font-weight:700;margin-bottom:8px;}
+    .plan .price{font-size:48px;font-weight:800;margin-bottom:8px;}
+    .plan .price span{font-size:20px;opacity:0.7;}
+    .plan .billing{font-size:14px;color:rgba(240,237,232,0.6);margin-bottom:24px;}
+    .plan ul{list-style:none;margin-bottom:32px;}
+    .plan li{padding:8px 0;display:flex;align-items:center;}
+    .plan li::before{content:'■';color:#ff3d00;margin-right:12px;}
+    .plan li.no::before{content:'✕';color:rgba(240,237,232,0.3);}
+    .plan .cta{display:block;width:100%;padding:14px 24px;background:#ff3d00;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;text-align:center;text-decoration:none;cursor:pointer;transition:background 0.2s;}
+    .plan .cta:hover{background:#e63600;}
+    .plan .trial{font-size:12px;color:rgba(240,237,232,0.5);margin-top:8px;}
+    .footer{text-align:center;margin-top:80px;color:rgba(240,237,232,0.5);font-size:14px;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Transparent Pricing</h1>
+      <p>PICK YOUR WEAPON<br>No hidden fees. No rate limit games. Scale from solo to enterprise without breaking your budget.</p>
+    </header>
+
+    <div class="plans">
+      <div class="plan">
+        <h2>STARTER</h2>
+        <div class="price">$0<span>/ mo</span></div>
+        <div class="billing">Free forever. No card required.</div>
+        <ul>
+          <li>3 active projects</li>
+          <li>50K events/month</li>
+          <li>1 team member</li>
+          <li>Community support</li>
+          <li>Basic analytics</li>
+          <li class="no">Custom domains</li>
+          <li class="no">AI inference layer</li>
+          <li class="no">SLA guarantee</li>
+        </ul>
+        <a href="/auth/sign-up" class="cta">START FREE →</a>
+      </div>
+
+      <div class="plan popular">
+        <h2>PRO</h2>
+        <div class="price">$79<span>/ mo</span></div>
+        <div class="billing">Billed annually — save $192/yr</div>
+        <ul>
+          <li>Unlimited projects</li>
+          <li>5M events/month</li>
+          <li>Up to 10 members</li>
+          <li>Priority email support</li>
+          <li>Full analytics suite</li>
+          <li>Custom domains</li>
+          <li class="no">AI inference layer</li>
+          <li>SLA guarantee</li>
+        </ul>
+        <a href="/auth/sign-up" class="cta">GET PRO →</a>
+        <div class="trial">14-day free trial. Cancel anytime.</div>
+      </div>
+
+      <div class="plan">
+        <h2>ENTERPRISE</h2>
+        <div class="price">CUSTOM</div>
+        <div class="billing">Volume discounts. Custom SLAs. Dedicated infra.</div>
+        <ul>
+          <li>Unlimited everything</li>
+          <li>Unlimited events</li>
+          <li>Unlimited members</li>
+          <li>24/7 dedicated support</li>
+          <li>Advanced analytics</li>
+          <li>Custom domains + SSL</li>
+          <li>AI inference + training</li>
+          <li>99.99% SLA guarantee</li>
+        </ul>
+        <a href="/contact-sales" class="cta">CONTACT SALES →</a>
+        <div class="trial">SSO, SAML, SCIM, custom data residency, and on-prem available.</div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <p>JOIN THE ENGINE</p>
+    </footer>
+  </div>
+</body>
+</html>

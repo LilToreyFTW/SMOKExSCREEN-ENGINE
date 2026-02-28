@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Sign Up — SmokeScreen ENGINE</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#03040a;color:#f0ede8;height:100vh;display:flex;align-items:center;justify-content:center;}
+    .card{background:#0b0e18;border:1px solid rgba(255,61,0,0.15);border-radius:12px;padding:48px;width:100%;max-width:420px;}
+    .logo{font-size:24px;font-weight:800;letter-spacing:-1px;margin-bottom:32px;text-align:center;}
+    .form{display:flex;flex-direction:column;gap:20px;}
+    .form label{font-size:14px;font-weight:600;color:rgba(240,237,232,0.8);display:block;margin-bottom:8px;}
+    .form input{width:100%;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:16px;outline:none;transition:border-color 0.2s;}
+    .form input:focus{border-color:#ff3d00;}
+    .form .password-wrapper{position:relative;}
+    .form .password-wrapper input{padding-right:44px;}
+    .form .toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(240,237,232,0.5);cursor:pointer;font-size:14px;}
+    .form button{width:100%;padding:14px 24px;background:#ff3d00;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;transition:background 0.2s;margin-top:8px;}
+    .form button:hover{background:#e63600;}
+    .divider{margin:32px 0;text-align:center;position:relative;}
+    .divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,0.1);}
+    .divider span{background:#0b0e18;padding:0 16px;position:relative;color:rgba(240,237,232,0.5);font-size:14px;}
+    .signin{text-align:center;margin-top:24px;color:rgba(240,237,232,0.6);font-size:14px;}
+    .signin a{color:#ff3d00;text-decoration:none;font-weight:600;}
+    .signin a:hover{text-decoration:underline;}
+    .note{font-size:12px;color:rgba(240,237,232,0.5);margin-top:8px;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">SMOKESCREEN ENGINE</div>
+    <h2 style="text-align:center;margin-bottom:24px;">JOIN THE ENGINE</h2>
+    <form class="form" method="post" action="/auth/register">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" placeholder="you@company.com" required autocomplete="email"/>
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" placeholder="username" required autocomplete="username"/>
+      <label for="password">Password</label>
+      <div class="password-wrapper">
+        <input type="password" id="password" name="password" placeholder="Create a strong password" required autocomplete="new-password"/>
+        <button type="button" class="toggle" onclick="togglePassword()">👁</button>
+      </div>
+      <label for="confirmPassword">Confirm Password</label>
+      <div class="password-wrapper">
+        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm password" required autocomplete="new-password"/>
+        <button type="button" class="toggle" onclick="toggleConfirmPassword()">👁</button>
+      </div>
+      <button type="submit">CREATE ONE →</button>
+      <p class="note">Password must be 10+ chars and include upper, lower, number, and special character.</p>
+    </form>
+
+    <div class="divider">
+      <span>OR</span>
+    </div>
+
+    <div class="signin">
+      Already have an account? <a href="/sign-in">SIGN IN →</a>
+    </div>
+  </div>
+
+  <script>
+    function togglePassword() {
+      const pwd = document.getElementById('password');
+      const btn = document.querySelector('.toggle');
+      if (pwd.type === 'password') {
+        pwd.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        pwd.type = 'password';
+        btn.textContent = '👁';
+      }
+    }
+    function toggleConfirmPassword() {
+      const pwd = document.getElementById('confirmPassword');
+      const btn = document.querySelectorAll('.toggle')[1];
+      if (pwd.type === 'password') {
+        pwd.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        pwd.type = 'password';
+        btn.textContent = '👁';
+      }
+    }
+  </script>
+</body>
+</html>

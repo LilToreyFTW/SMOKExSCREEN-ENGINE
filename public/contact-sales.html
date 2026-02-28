@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Contact Sales — SmokeScreen ENGINE</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#03040a;color:#f0ede8;height:100vh;display:flex;align-items:center;justify-content:center;}
+    .card{background:#0b0e18;border:1px solid rgba(255,61,0,0.15);border-radius:12px;padding:48px;width:100%;max-width:420px;}
+    .logo{font-size:24px;font-weight:800;letter-spacing:-1px;margin-bottom:32px;text-align:center;}
+    .form{display:flex;flex-direction:column;gap:20px;}
+    .form label{font-size:14px;font-weight:600;color:rgba(240,237,232,0.8);display:block;margin-bottom:8px;}
+    .form input, .form textarea{width:100%;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:16px;outline:none;transition:border-color 0.2s;}
+    .form input:focus, .form textarea:focus{border-color:#ff3d00;}
+    .form textarea{resize:vertical;min-height:120px;}
+    .form button{width:100%;padding:14px 24px;background:#ff3d00;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;transition:background 0.2s;}
+    .form button:hover{background:#e63600;}
+    .back{text-align:center;margin-top:24px;}
+    .back a{color:#ff3d00;text-decoration:none;font-weight:600;}
+    .back a:hover{text-decoration:underline;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">SMOKESCREEN ENGINE</div>
+    <h2 style="text-align:center;margin-bottom:24px;">Contact Sales</h2>
+    <form class="form" method="post" action="/contact-sales">
+      <label for="name">Full Name</label>
+      <input type="text" id="name" name="name" placeholder="Your name" required autocomplete="name"/>
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" placeholder="you@company.com" required autocomplete="email"/>
+      <label for="company">Company</label>
+      <input type="text" id="company" name="company" placeholder="Your company" autocomplete="organization"/>
+      <label for="message">Message</label>
+      <textarea id="message" name="message" placeholder="Tell us about your enterprise needs..." required></textarea>
+      <button type="submit">SEND MESSAGE →</button>
+    </form>
+
+    <div class="back">
+      <a href="/pricing">← Back to pricing</a>
+    </div>
+  </div>
+</body>
+</html>

