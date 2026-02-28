@@ -292,7 +292,12 @@ app.get('/auth/csrf', csrfProtection, (req, res) => {
   return res.json({ csrfToken: req.csrfToken() });
 });
 
+// ─── Discord OAuth ENGINE landing page ────────────────────────────────────────
 app.get('/auth/discord/engine-landing', (req, res) => {
+  res.sendFile(path.join(__dirname, 'engine-landing.html'));
+});
+
+app.get('/auth/discord/engine-callback', (req, res) => {
   const code = String(req.query.code || '');
   const state = String(req.query.state || '');
   const error = String(req.query.error || '');
@@ -625,6 +630,72 @@ app.get('/keys/validate', requireAuth, async (req, res) => {
       days_remaining: daysRemaining,
       key_count: keyCount,
     });
+  } catch (e) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/auth/discord/engine-callback', express.json(), async (req, res) => {
+  const code = String(req.body?.code || '').trim();
+  const state = String(req.body?.state || '').trim();
+  if (!code) return res.status(400).json({ message: 'Missing code' });
+  if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET) return res.status(500).json({ message: 'Discord OAuth not configured' });
+
+  try {
+    const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: DISCORD_CLIENT_ID,
+        client_secret: DISCORD_CLIENT_SECRET,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: 'https://smok-ex-screen-engine.vercel.app/auth/discord/engine-landing',
+      }),
+    });
+    const tokenJson = await tokenRes.json();
+    if (!tokenRes.ok) return res.status(401).json({ message: tokenJson?.error_description || 'Discord token exchange failed' });
+    const accessToken = tokenJson.access_token;
+    if (!accessToken) return res.status(401).json({ message: 'Discord token exchange failed' });
+
+    const meRes = await fetch('https://discord.com/api/users/@me', {
+      headers: { authorization: `Bearer ${accessToken}` },
+    });
+    const me = await meRes.json();
+    if (!meRes.ok || !me?.id) return res.status(401).json({ message: 'Discord profile fetch failed' });
+
+    const discordId = String(me.id);
+    const discordUsername = me.global_name || me.username || null;
+    const discordAvatar = me.avatar || null;
+
+    const existing = await pool.query('SELECT id, username, email, role FROM users WHERE discord_id = $1 LIMIT 1', [discordId]);
+    let userId;
+    if (existing.rowCount === 0) {
+      userId = uuidv4();
+      const usernameBase = String(discordUsername || `discord_${discordId}`).slice(0, 32);
+      const username = `${usernameBase}`;
+      await pool.query(
+        'INSERT INTO users (id, username, email, password_hash, role, discord_id, discord_username, discord_avatar, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+        [userId, username, null, null, 'user', discordId, discordUsername, discordAvatar, nowMs()]
+      );
+      await logActivity({ userId, action: 'DISCORD_REGISTER', detail: discordId, req });
+    } else {
+      userId = existing.rows[0].id;
+      await pool.query(
+        'UPDATE users SET discord_username = $2, discord_avatar = $3 WHERE id = $1',
+        [userId, discordUsername, discordAvatar]
+      );
+      await logActivity({ userId, action: 'DISCORD_LOGIN', detail: discordId, req });
+    }
+
+    const sessionToken = uuidv4();
+    const expires = nowMs() + 14 * 24 * 60 * 60 * 1000;
+    await pool.query(
+      'INSERT INTO sessions (token, user_id, type, expires, created_at) VALUES ($1,$2,$3,$4,$5)',
+      [sessionToken, userId, 'engine', expires, nowMs()]
+    );
+
+    return res.json({ token: sessionToken });
   } catch (e) {
     return res.status(500).json({ message: 'Server error' });
   }
