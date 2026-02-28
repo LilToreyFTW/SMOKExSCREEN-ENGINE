@@ -22,6 +22,7 @@
     <Compile Remove="EngineClient.cs" />
     <Compile Remove="HardwareId.cs" />
     <Compile Remove="Theme.cs" />
+    <Compile Remove="EnginePage.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -50,6 +50,7 @@ namespace SmokeScreenEngine
 
             _tabs.TabPages.Add(BuildAccountTab());
             _tabs.TabPages.Add(BuildLicenseTab());
+            _tabs.TabPages.Add(BuildEngineTab());
             _tabs.TabPages.Add(BuildToolsTab());
 
             // Upper‑left ping/status label
@@ -211,6 +212,14 @@ namespace SmokeScreenEngine
             return tp;
         }
 
+        private TabPage BuildEngineTab()
+        {
+            var tp = new TabPage("ENGINE") { BackColor = Theme.Background };
+            var page = new EnginePage { Dock = DockStyle.Fill };
+            tp.Controls.Add(page);
+            return tp;
+        }
+
         private TabPage BuildToolsTab()
         {
             var tp = new TabPage("TOOLS") { BackColor = Theme.Background };
@@ -266,10 +275,28 @@ namespace SmokeScreenEngine
                 f.ShowDialog(this);
             };
 
+            var openSpooferBtn = new Button
+            {
+                Text = "OPEN PC CLEANER →",
+                Bounds = new Rectangle(24, 234, 320, 50),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.FromArgb(24, 30, 42),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            openSpooferBtn.FlatAppearance.BorderSize = 0;
+            openSpooferBtn.Click += (_, __) =>
+            {
+                using var f = new SpooferForm(_license?.HasAccess ?? false);
+                f.ShowDialog(this);
+            };
+
             tp.Controls.Add(title);
             tp.Controls.Add(hint);
             tp.Controls.Add(_openMarketplaceBtn);
             tp.Controls.Add(_openCloudBtn);
+            tp.Controls.Add(openSpooferBtn);
 
             return tp;
         }
