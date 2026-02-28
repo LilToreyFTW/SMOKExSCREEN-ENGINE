@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SmokeScreen ENGINE — Redeem Key</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0f1115;--panel:#151826;--panel2:#0b0e18;--text:#e6e8ef;--muted:#97a1bd;--accent:#00e5ff;--danger:#ff3b5c;--ok:#41ff8b;--border:rgba(255,255,255,.08)}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    .container{max-width:500px;margin:5vh auto;padding:24px}
+    .card{background:var(--panel);border-radius:12px;border:1px solid var(--border);padding:32px}
+    h1{margin:0 0 8px;font-size:24px;letter-spacing:.5px}
+    .subtitle{color:var(--muted);margin:0 0 24px}
+    .input-group{margin-bottom:20px}
+    label{display:block;margin-bottom:8px;color:var(--muted);font-size:14px}
+    input{width:100%;padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--panel2);color:var(--text);font-size:16px}
+    input:focus{outline:none;border-color:var(--accent)}
+    button{width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:var(--bg);font-size:16px;font-weight:600;cursor:pointer}
+    button:hover{background:#00c7e6}
+    button:disabled{background:var(--muted);cursor:not-allowed}
+    .msg{margin-top:16px;padding:12px;border-radius:8px;font-size:14px}
+    .msg.ok{background:rgba(65,255,139,.1);color:var(--ok);border:1px solid var(--ok)}
+    .msg.err{background:rgba(255,59,92,.1);color:var(--danger);border:1px solid var(--danger)}
+    .cached{margin-top:12px;font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>SmokeScreen ENGINE</h1>
+      <p class="subtitle">Redeem your license key</p>
+
+      <div class="input-group">
+        <label for="keyInput">License Key</label>
+        <input id="keyInput" type="text" placeholder="SS-XXXX-XXXX-XXXX-XXXX" autocomplete="off" />
+        <div class="cached" id="cachedInfo"></div>
+      </div>
+
+      <button id="redeemBtn">Redeem Key</button>
+      <div id="msg"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://smok-ex-screen-engine.vercel.app';
+    let token = null;
+
+    // Parse Discord auth code and exchange for token
+    async function handleDiscordCallback() {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const state = params.get('state');
+      if (!code) return showError('Missing Discord authorization code.');
+
+      try {
+        const r = await fetch(`${API_BASE}/auth/discord/engine-callback`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ code, state })
+        });
+        const data = await r.json();
+        if (!r.ok || !data.token) throw new Error(data.message || 'Auth failed');
+        token = data.token;
+        // Load cached keys
+        loadCachedKeys();
+      } catch (e) {
+        showError(e.message);
+      }
+    }
+
+    // Load cached unused keys from /admin/keys (requires admin session; fallback to public endpoint if needed)
+    async function loadCachedKeys() {
+      try {
+        const r = await fetch(`${API_BASE}/admin/keys?status=unused&limit=10`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!r.ok) return;
+        const data = await r.json();
+        const keys = (data.keys || []).map(k => k.key_value);
+        if (keys.length) {
+          document.getElementById('cachedInfo').textContent = `${keys.length} cached key(s) available. Click to auto‑fill.`;
+          document.getElementById('cachedInfo').style.cursor = 'pointer';
+          document.getElementById('cachedInfo').onclick = () => {
+            document.getElementById('keyInput').value = keys[0];
+          };
+        } else {
+          document.getElementById('cachedInfo').textContent = 'No cached keys available.';
+        }
+      } catch {
+        document.getElementById('cachedInfo').textContent = 'Could not load cached keys.';
+      }
+    }
+
+    // Redeem key
+    async function redeem() {
+      const key = document.getElementById('keyInput').value.trim();
+      if (!key) return showError('Enter a key.');
+      if (!token) return showError('Not authenticated.');
+
+      showMsg('Redeeming...', '');
+      try {
+        const r = await fetch(`${API_BASE}/keys/redeem`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ key })
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.message || 'Redeem failed');
+        showOk('Key redeemed successfully! You can now use the GUI.');
+        document.getElementById('keyInput').value = '';
+        // Refresh cached keys
+        loadCachedKeys();
+      } catch (e) {
+        showError(e.message);
+      }
+    }
+
+    function showOk(txt) {
+      const el = document.getElementById('msg');
+      el.className = 'msg ok';
+      el.textContent = txt;
+    }
+    function showError(txt) {
+      const el = document.getElementById('msg');
+      el.className = 'msg err';
+      el.textContent = txt;
+    }
+    function showMsg(txt, cls) {
+      const el = document.getElementById('msg');
+      el.className = 'msg ' + cls;
+      el.textContent = txt;
+    }
+
+    document.getElementById('redeemBtn').addEventListener('click', redeem);
+    document.getElementById('keyInput').addEventListener('keydown', e => { if (e.key === 'Enter') redeem(); });
+
+    // Init
+    handleDiscordCallback();
+  </script>
+</body>
+</html>
