@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Forgot Password — SmokeScreen ENGINE</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0f1115;--panel:#151826;--panel2:#0b0e18;--text:#e6e8ef;--muted:#97a1bd;--accent:#00e5ff;--danger:#ff3b5c;--ok:#41ff8b;--border:rgba(255,255,255,.08)}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+    .card{width:100%;max-width:520px;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:16px;padding:22px}
+    h1{font-size:20px;margin:0 0 6px 0;letter-spacing:.5px}p{margin:0 0 18px 0;color:var(--muted);font-size:13px;line-height:1.4}
+    label{display:block;font-size:12px;color:var(--muted);margin:14px 0 6px}
+    input{width:100%;padding:12px 12px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);outline:none}
+    input:focus{border-color:rgba(0,229,255,.5)}
+    .btn{width:100%;margin-top:16px;padding:12px 14px;border-radius:10px;border:1px solid rgba(0,229,255,.35);background:rgba(0,229,255,.12);color:var(--text);cursor:pointer;font-weight:600}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .meta{display:flex;justify-content:space-between;gap:10px;margin-top:12px;font-size:12px;color:var(--muted)}
+    .err{margin-top:12px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,59,92,.35);background:rgba(255,59,92,.08);color:#ffd2da;display:none}
+    .ok{margin-top:12px;padding:10px 12px;border-radius:10px;border:1px solid rgba(65,255,139,.35);background:rgba(65,255,139,.08);color:#bfffd5;display:none}
+    .fieldErr{font-size:12px;color:#ffd2da;margin-top:6px;display:none}
+    code{color:#b7f8ff}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Reset password</h1>
+      <p>Enter your email. If an account exists, you’ll receive a reset link.</p>
+
+      <form id="forgotForm" novalidate>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" required />
+        <div class="fieldErr" id="emailErr"></div>
+
+        <div class="err" id="formErr"></div>
+        <div class="ok" id="formOk"></div>
+
+        <button class="btn" id="submitBtn" type="submit">Send reset link</button>
+      </form>
+
+      <div class="meta">
+        <a href="/auth/login">Back to login</a>
+        <a href="/">Home</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function show(el, msg) {
+      el.textContent = msg || '';
+      el.style.display = msg ? 'block' : 'none';
+    }
+
+    function isValidEmail(s) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || '').trim());
+    }
+
+    async function getCsrfToken() {
+      const res = await fetch('/auth/csrf', { credentials: 'include' });
+      if (!res.ok) throw new Error('Could not start session');
+      const data = await res.json();
+      return data.csrfToken;
+    }
+
+    $('forgotForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      show($('emailErr'), '');
+      show($('formErr'), '');
+      show($('formOk'), '');
+
+      const email = $('email').value.trim();
+      if (!email) return show($('emailErr'), 'Email is required');
+      if (!isValidEmail(email)) return show($('emailErr'), 'Enter a valid email');
+
+      $('submitBtn').disabled = true;
+      try {
+        const csrfToken = await getCsrfToken();
+        const res = await fetch('/auth/forgot', {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'csrf-token': csrfToken
+          },
+          credentials: 'include',
+          body: JSON.stringify({ email })
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          show($('formErr'), data.message || 'Request failed');
+          return;
+        }
+
+        show($('formOk'), 'If an account exists, a reset link has been generated.');
+        if (data.resetUrl) {
+          show($('formOk'), `Reset link (dev): ${data.resetUrl}`);
+        }
+      } catch (err) {
+        show($('formErr'), 'Could not reach server');
+      } finally {
+        $('submitBtn').disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

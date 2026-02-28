@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pricing — SmokeScreen ENGINE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --fire: #FF3D00;
+    --ember: #FF6B35;
+    --white: #F0EDE8;
+    --grid: rgba(255,61,0,0.06);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #0D0D0D; color: var(--white);
+    font-family: 'Syne', sans-serif; overflow-x: hidden; cursor: crosshair;
+  }
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 60px 60px; pointer-events:none; z-index:0;
+  }
+  body::after {
+    content:''; position:fixed; inset:0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+    pointer-events:none; z-index:999;
+  }
+  nav {
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    border-bottom:1px solid rgba(255,61,0,0.3);
+    background:rgba(13,13,13,0.92); backdrop-filter:blur(12px);
+  }
+  .nav-inner {
+    max-width:1400px; margin:0 auto; padding:0 2rem;
+    height:64px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .logo { font-family:'Bebas Neue',sans-serif; font-size:1.6rem; letter-spacing:0.1em; }
+  .logo span { color:var(--fire); }
+  .nav-links a {
+    font-family:'DM Mono',monospace; font-size:0.75rem;
+    color:rgba(240,237,232,0.5); text-decoration:none;
+    margin-left:2rem; letter-spacing:0.1em; text-transform:uppercase; transition:color 0.2s;
+  }
+  .nav-links a:hover, .nav-links a.active { color:var(--fire); }
+
+  .page-hero {
+    padding-top: 130px; padding-bottom: 4rem;
+    max-width:1400px; margin:0 auto; padding-left:2rem; padding-right:2rem;
+    position:relative; z-index:1; text-align:center;
+  }
+  .hero-tag {
+    font-family:'DM Mono',monospace; font-size:0.7rem; color:var(--fire);
+    letter-spacing:0.25em; text-transform:uppercase; margin-bottom:1.5rem;
+    display:inline-flex; align-items:center; gap:1rem;
+  }
+  .hero-title {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(60px,9vw,120px); line-height:0.9; letter-spacing:0.02em;
+    margin-bottom:1.5rem;
+  }
+  .hero-title em { color:var(--fire); font-style:normal; }
+  .hero-desc { font-size:1rem; color:rgba(240,237,232,0.5); max-width:500px; margin:0 auto 2.5rem; line-height:1.7; }
+
+  /* TOGGLE */
+  .toggle-wrap {
+    display:inline-flex; align-items:center; gap:1rem;
+    font-family:'DM Mono',monospace; font-size:0.75rem; color:rgba(240,237,232,0.5); letter-spacing:0.1em;
+  }
+  .toggle {
+    width:48px; height:26px; background:#1a1a1a; border:1px solid rgba(255,61,0,0.3);
+    border-radius:0; position:relative; cursor:pointer; transition:background 0.2s;
+  }
+  .toggle.on { background:var(--fire); border-color:var(--fire); }
+  .toggle-knob {
+    position:absolute; top:3px; left:3px;
+    width:18px; height:18px; background:var(--white); transition:transform 0.2s;
+  }
+  .toggle.on .toggle-knob { transform:translateX(22px); }
+  .save-badge {
+    background:var(--fire); color:#0D0D0D;
+    font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase;
+    padding:0.2rem 0.5rem;
+  }
+
+  /* PRICING CARDS */
+  .pricing-section {
+    max-width:1400px; margin:0 auto; padding:3rem 2rem 6rem;
+    position:relative; z-index:1;
+  }
+  .pricing-grid {
+    display:grid; grid-template-columns:repeat(3,1fr);
+    gap:1px; background:rgba(255,61,0,0.12);
+    border:1px solid rgba(255,61,0,0.12);
+    position:relative;
+  }
+
+  .plan-card {
+    background:#0D0D0D; padding:2.5rem; position:relative; overflow:hidden;
+  }
+  .plan-card.featured { background:#110800; }
+  .plan-card.featured::after {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--fire);
+  }
+
+  .plan-badge {
+    display:inline-block; font-family:'DM Mono',monospace; font-size:0.6rem;
+    letter-spacing:0.15em; text-transform:uppercase; color:#0D0D0D;
+    background:var(--fire); padding:0.25rem 0.7rem; margin-bottom:1.5rem;
+  }
+
+  .plan-name {
+    font-family:'Bebas Neue',sans-serif; font-size:2rem;
+    letter-spacing:0.05em; color:var(--white); margin-bottom:0.5rem;
+  }
+  .plan-tagline { font-size:0.8rem; color:rgba(240,237,232,0.4); margin-bottom:2rem; line-height:1.5; }
+
+  .plan-price {
+    display:flex; align-items:baseline; gap:0.5rem; margin-bottom:0.5rem;
+  }
+  .price-num {
+    font-family:'Bebas Neue',sans-serif; font-size:4rem; color:var(--white); line-height:1;
+  }
+  .plan-card.featured .price-num { color:var(--fire); }
+  .price-period { font-family:'DM Mono',monospace; font-size:0.7rem; color:rgba(240,237,232,0.35); }
+
+  .price-annual { font-family:'DM Mono',monospace; font-size:0.65rem; color:rgba(240,237,232,0.3); margin-bottom:2rem; }
+  .price-annual em { color:var(--fire); font-style:normal; }
+
+  .plan-cta {
+    display:block; width:100%; padding:1rem 0;
+    font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.1em;
+    text-align:center; border:none; cursor:pointer; transition:all 0.2s; text-decoration:none;
+    margin-bottom:2rem;
+  }
+  .plan-cta.outline {
+    background:transparent; color:var(--white); border:1px solid rgba(255,61,0,0.4);
+  }
+  .plan-cta.outline:hover { background:rgba(255,61,0,0.1); border-color:var(--fire); }
+  .plan-cta.solid { background:var(--fire); color:#0D0D0D; }
+  .plan-cta.solid:hover { background:var(--ember); }
+
+  .plan-divider {
+    height:1px; background:rgba(255,61,0,0.12); margin-bottom:1.5rem;
+  }
+
+  .feature-list li {
+    list-style:none; display:flex; align-items:flex-start; gap:0.75rem;
+    font-size:0.82rem; color:rgba(240,237,232,0.55); margin-bottom:0.85rem; line-height:1.5;
+  }
+  .feature-list li .check { color:var(--fire); font-size:0.75rem; flex-shrink:0; margin-top:2px; }
+  .feature-list li .cross { color:rgba(240,237,232,0.2); font-size:0.75rem; flex-shrink:0; margin-top:2px; }
+  .feature-list li.dim { color:rgba(240,237,232,0.25); }
+
+  .plan-note {
+    margin-top:1.5rem; font-family:'DM Mono',monospace; font-size:0.65rem;
+    color:rgba(240,237,232,0.25); letter-spacing:0.05em; line-height:1.6;
+  }
+
+  /* COMPARISON TABLE */
+  .compare-section {
+    max-width:1400px; margin:0 auto; padding:0 2rem 6rem;
+    position:relative; z-index:1;
+  }
+  .compare-label {
+    font-family:'DM Mono',monospace; font-size:0.7rem; color:var(--fire);
+    letter-spacing:0.25em; text-transform:uppercase;
+    display:flex; align-items:center; gap:1rem; margin-bottom:3rem;
+  }
+  .compare-label::after { content:''; flex:1; height:1px; background:rgba(255,61,0,0.3); }
+
+  .compare-table { width:100%; border-collapse:collapse; }
+  .compare-table th {
+    font-family:'Bebas Neue',sans-serif; font-size:1.2rem; letter-spacing:0.05em;
+    color:var(--white); padding:1rem 1.5rem; text-align:left;
+    border-bottom:1px solid rgba(255,61,0,0.2);
+  }
+  .compare-table th:first-child { color:rgba(240,237,232,0.3); font-size:0.7rem; font-family:'DM Mono',monospace; letter-spacing:0.1em; }
+  .compare-table th.highlight { color:var(--fire); }
+  .compare-table td {
+    padding:0.9rem 1.5rem; font-size:0.82rem; color:rgba(240,237,232,0.55);
+    border-bottom:1px solid rgba(255,255,255,0.04);
+    font-family:'DM Mono',monospace;
+  }
+  .compare-table td.highlight { color:var(--white); background:rgba(255,61,0,0.04); }
+  .compare-table td.feature-name { color:rgba(240,237,232,0.7); font-size:0.8rem; }
+  .compare-table tr:hover td { background:rgba(255,255,255,0.02); }
+  .check-y { color:var(--fire); }
+  .check-n { color:rgba(255,255,255,0.15); }
+
+  /* FAQ */
+  .faq-section {
+    max-width:900px; margin:0 auto; padding:0 2rem 6rem; position:relative; z-index:1;
+  }
+  .faq-label {
+    font-family:'DM Mono',monospace; font-size:0.7rem; color:var(--fire);
+    letter-spacing:0.25em; text-transform:uppercase;
+    display:flex; align-items:center; gap:1rem; margin-bottom:3rem;
+  }
+  .faq-label::after { content:''; flex:1; height:1px; background:rgba(255,61,0,0.3); }
+  .faq-item {
+    border-bottom:1px solid rgba(255,61,0,0.12); padding:1.5rem 0; cursor:pointer;
+  }
+  .faq-q {
+    font-family:'Bebas Neue',sans-serif; font-size:1.2rem; letter-spacing:0.04em;
+    color:var(--white); display:flex; justify-content:space-between; align-items:center;
+  }
+  .faq-arrow { color:var(--fire); transition:transform 0.3s; font-size:1rem; }
+  .faq-item.open .faq-arrow { transform:rotate(90deg); }
+  .faq-a {
+    font-size:0.85rem; color:rgba(240,237,232,0.5); line-height:1.7;
+    max-height:0; overflow:hidden; transition:max-height 0.4s ease, margin-top 0.3s;
+  }
+  .faq-item.open .faq-a { max-height:200px; margin-top:1rem; }
+
+  footer {
+    border-top:1px solid rgba(255,61,0,0.2); padding:2rem; text-align:center;
+    font-family:'DM Mono',monospace; font-size:0.7rem; color:rgba(240,237,232,0.25); letter-spacing:0.1em;
+    position:relative; z-index:1;
+  }
+
+  @media(max-width:900px) { .pricing-grid{grid-template-columns:1fr;} .nav-links{display:none;} }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo">SMOKE<span>SCREEN</span> ENGINE</div>
+    <div class="nav-links">
+      <a href="../product/">PRODUCT</a>
+      <a href="../features/">FEATURES</a>
+      <a href="../marketplace/">MARKETPLACE</a>
+      <a href="./" class="active">PRICING</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <div class="hero-tag">Transparent Pricing</div>
+  <h1 class="hero-title">PICK YOUR<br><em>WEAPON</em></h1>
+  <p class="hero-desc">No hidden fees. No rate limit games. Scale from solo to enterprise without breaking your budget.</p>
+  <div class="toggle-wrap">
+    <span>MONTHLY</span>
+    <div class="toggle on" id="billingToggle">
+      <div class="toggle-knob"></div>
+    </div>
+    <span>ANNUAL</span>
+    <span class="save-badge">SAVE 20%</span>
+  </div>
+</div>
+
+<div class="pricing-section">
+  <div class="pricing-grid">
+
+    <!-- STARTER -->
+    <div class="plan-card">
+      <div class="plan-name">STARTER</div>
+      <div class="plan-tagline">For builders and solo developers moving fast.</div>
+      <div class="plan-price">
+        <div class="price-num" data-monthly="0" data-annual="0">$0</div>
+        <div class="price-period">/ mo</div>
+      </div>
+      <div class="price-annual">Free forever. No card required.</div>
+      <a href="#" class="plan-cta outline">START FREE →</a>
+      <div class="plan-divider"></div>
+      <ul class="feature-list">
+        <li><span class="check">■</span> 3 active projects</li>
+        <li><span class="check">■</span> 50K events/month</li>
+        <li><span class="check">■</span> 1 team member</li>
+        <li><span class="check">■</span> Community support</li>
+        <li><span class="check">■</span> Basic analytics</li>
+        <li class="dim"><span class="cross">✕</span> Custom domains</li>
+        <li class="dim"><span class="cross">✕</span> AI inference layer</li>
+        <li class="dim"><span class="cross">✕</span> SLA guarantee</li>
+      </ul>
+    </div>
+
+    <!-- PRO (FEATURED) -->
+    <div class="plan-card featured">
+      <div class="plan-badge">MOST POPULAR</div>
+      <div class="plan-name">PRO</div>
+      <div class="plan-tagline">For serious teams shipping production workloads.</div>
+      <div class="plan-price">
+        <div class="price-num" data-monthly="79" data-annual="63">$63</div>
+        <div class="price-period">/ mo</div>
+      </div>
+      <div class="price-annual">Billed annually — <em>save $192/yr</em></div>
+      <a href="#" class="plan-cta solid">GET PRO →</a>
+      <div class="plan-divider"></div>
+      <ul class="feature-list">
+        <li><span class="check">■</span> Unlimited projects</li>
+        <li><span class="check">■</span> 5M events/month</li>
+        <li><span class="check">■</span> Up to 10 members</li>
+        <li><span class="check">■</span> Priority email support</li>
+        <li><span class="check">■</span> Full analytics suite</li>
+        <li><span class="check">■</span> Custom domains</li>
+        <li><span class="check">■</span> AI inference layer</li>
+        <li class="dim"><span class="cross">✕</span> SLA guarantee</li>
+      </ul>
+      <div class="plan-note">14-day free trial. Cancel anytime.</div>
+    </div>
+
+    <!-- ENTERPRISE -->
+    <div class="plan-card">
+      <div class="plan-name">ENTERPRISE</div>
+      <div class="plan-tagline">For organizations that demand maximum control and scale.</div>
+      <div class="plan-price">
+        <div class="price-num">CUSTOM</div>
+      </div>
+      <div class="price-annual">Volume discounts. Custom SLAs. Dedicated infra.</div>
+      <a href="#" class="plan-cta outline">CONTACT SALES →</a>
+      <div class="plan-divider"></div>
+      <ul class="feature-list">
+        <li><span class="check">■</span> Unlimited everything</li>
+        <li><span class="check">■</span> Unlimited events</li>
+        <li><span class="check">■</span> Unlimited members</li>
+        <li><span class="check">■</span> 24/7 dedicated support</li>
+        <li><span class="check">■</span> Advanced analytics</li>
+        <li><span class="check">■</span> Custom domains + SSL</li>
+        <li><span class="check">■</span> AI inference + training</li>
+        <li><span class="check">■</span> 99.99% SLA guarantee</li>
+      </ul>
+      <div class="plan-note">SSO, SAML, SCIM, custom data residency, and on-prem available.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- COMPARISON TABLE -->
+<div class="compare-section">
+  <div class="compare-label">Full Comparison</div>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Starter</th>
+        <th class="highlight">Pro</th>
+        <th>Enterprise</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="feature-name">Active Projects</td><td>3</td><td class="highlight">Unlimited</td><td>Unlimited</td></tr>
+      <tr><td class="feature-name">Events / Month</td><td>50K</td><td class="highlight">5M</td><td>Unlimited</td></tr>
+      <tr><td class="feature-name">Team Members</td><td>1</td><td class="highlight">10</td><td>Unlimited</td></tr>
+      <tr><td class="feature-name">API Requests / Day</td><td>10K</td><td class="highlight">1M</td><td>Unlimited</td></tr>
+      <tr><td class="feature-name">Custom Domains</td><td class="check-n">✕</td><td class="highlight check-y">✓</td><td class="check-y">✓</td></tr>
+      <tr><td class="feature-name">AI Inference Layer</td><td class="check-n">✕</td><td class="highlight check-y">✓</td><td class="check-y">✓</td></tr>
+      <tr><td class="feature-name">Real-Time Pipelines</td><td class="check-n">✕</td><td class="highlight check-y">✓</td><td class="check-y">✓</td></tr>
+      <tr><td class="feature-name">SLA Guarantee</td><td class="check-n">✕</td><td class="highlight check-n">✕</td><td class="check-y">✓</td></tr>
+      <tr><td class="feature-name">SSO / SAML</td><td class="check-n">✕</td><td class="highlight check-n">✕</td><td class="check-y">✓</td></tr>
+      <tr><td class="feature-name">On-Prem Deploy</td><td class="check-n">✕</td><td class="highlight check-n">✕</td><td class="check-y">✓</td></tr>
+      <tr><td class="feature-name">Support Level</td><td>Community</td><td class="highlight">Priority Email</td><td>24/7 Dedicated</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- FAQ -->
+<div class="faq-section">
+  <div class="faq-label">Common Questions</div>
+
+  <div class="faq-item open">
+    <div class="faq-q">Can I switch plans anytime? <span class="faq-arrow">▶</span></div>
+    <div class="faq-a">Yes. Upgrade or downgrade at any time. Upgrades take effect immediately; downgrades apply at the next billing cycle. No penalties, no lock-ins.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">What happens if I exceed my event limit? <span class="faq-arrow">▶</span></div>
+    <div class="faq-a">We'll notify you at 80% and 100%. You won't be cut off mid-month — you'll have the option to upgrade or purchase an event top-up bundle instead.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Is there a free trial for Pro? <span class="faq-arrow">▶</span></div>
+    <div class="faq-a">Yes. Pro comes with a 14-day free trial, no credit card required. Full access to all Pro features from day one.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Do you offer discounts for startups or nonprofits? <span class="faq-arrow">▶</span></div>
+    <div class="faq-a">We do. Qualifying early-stage startups and registered nonprofits can get up to 50% off Pro. Reach out to our team with your details.</div>
+  </div>
+</div>
+
+<footer>
+  © 2025 SMOKESCREEN ENGINE — PRICING LAST UPDATED FEB 2025 — ALL PRICES IN USD
+</footer>
+
+<script>
+  const toggle = document.getElementById('billingToggle');
+  let isAnnual = true;
+
+  toggle.addEventListener('click', () => {
+    isAnnual = !isAnnual;
+    toggle.classList.toggle('on', isAnnual);
+
+    document.querySelectorAll('.price-num[data-monthly]').forEach(el => {
+      const val = isAnnual ? el.dataset.annual : el.dataset.monthly;
+      el.textContent = val == 0 ? '$0' : `$${val}`;
+    });
+  });
+
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+</script>
+</body>
+</html>

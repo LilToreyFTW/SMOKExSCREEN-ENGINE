@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmokeScreen ENGINE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --fire: #FF3D00;
+      --ember: #FF6B35;
+      --white: #F0EDE8;
+      --grid: rgba(255,61,0,0.06);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: #0D0D0D;
+      color: var(--white);
+      font-family: 'Syne', sans-serif;
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+    body::before {
+      content:'';
+      position:fixed;
+      inset:0;
+      background-image:
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events:none;
+      z-index:0;
+    }
+    body::after {
+      content:'';
+      position:fixed;
+      inset:0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+      pointer-events:none;
+      z-index:999;
+    }
+    nav {
+      position:fixed;
+      top:0; left:0; right:0;
+      z-index:100;
+      border-bottom:1px solid rgba(255,61,0,0.3);
+      background:rgba(13,13,13,0.92);
+      backdrop-filter:blur(12px);
+    }
+    .nav-inner {
+      max-width:1400px;
+      margin:0 auto;
+      padding:0 2rem;
+      height:64px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 1rem;
+    }
+    .logo { font-family:'Bebas Neue',sans-serif; font-size:1.6rem; letter-spacing:0.1em; white-space: nowrap; }
+    .logo span { color:var(--fire); }
+    .nav-links { display:flex; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .nav-links a {
+      font-family:'DM Mono',monospace;
+      font-size:0.75rem;
+      color:rgba(240,237,232,0.5);
+      text-decoration:none;
+      margin-left:2rem;
+      letter-spacing:0.1em;
+      text-transform:uppercase;
+      transition:color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color:var(--fire); }
+    .auth-links { display:flex; align-items:center; }
+    .auth-links a { margin-left: 1.25rem; }
+
+    .page { display:none; }
+    .page.active { display:block; }
+
+    .hero {
+      min-height: 100vh;
+      position:relative;
+      z-index:1;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      max-width:1400px;
+      margin:0 auto;
+      padding:0 2rem;
+      overflow:hidden;
+    }
+    .hero-bg-text {
+      position:absolute;
+      right:-2rem;
+      top:50%;
+      transform:translateY(-50%);
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(160px,25vw,320px);
+      color:rgba(255,61,0,0.04);
+      line-height:1;
+      pointer-events:none;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .hero-eyebrow {
+      font-family:'DM Mono',monospace;
+      font-size:0.7rem;
+      color:var(--fire);
+      letter-spacing:0.3em;
+      text-transform:uppercase;
+      margin-bottom:2rem;
+      display:flex;
+      align-items:center;
+      gap:1rem;
+    }
+    .hero-eyebrow::before { content:''; display:block; width:50px; height:1px; background:var(--fire); }
+    .hero-h1 {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(70px,12vw,150px);
+      line-height:0.88;
+      letter-spacing:0.01em;
+      max-width:900px;
+    }
+    .hero-h1 em { color:var(--fire); font-style:normal; }
+    .hero-bottom {
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      margin-top:5vh;
+      flex-wrap:wrap;
+      gap:2rem;
+    }
+    .hero-desc { max-width:440px; font-size:1rem; color:rgba(240,237,232,0.55); line-height:1.8; }
+    .hero-actions { display:flex; gap:1rem; flex-wrap:wrap; }
+    .btn-primary {
+      background:var(--fire);
+      color:#0D0D0D;
+      font-family:'Bebas Neue',sans-serif;
+      font-size:1.1rem;
+      letter-spacing:0.1em;
+      padding:0.9rem 2.5rem;
+      border:none;
+      cursor:pointer;
+      transition:background 0.2s;
+      text-decoration:none;
+      display:inline-block;
+    }
+    .btn-primary:hover { background:var(--ember); }
+    .btn-ghost {
+      background:transparent;
+      color:var(--white);
+      font-family:'Bebas Neue',sans-serif;
+      font-size:1.1rem;
+      letter-spacing:0.1em;
+      padding:0.9rem 2.5rem;
+      border:1px solid rgba(240,237,232,0.2);
+      cursor:pointer;
+      transition:all 0.2s;
+      text-decoration:none;
+      display:inline-block;
+    }
+    .btn-ghost:hover { border-color:var(--fire); color:var(--fire); }
+
+    .status-bar {
+      background:rgba(255,61,0,0.06);
+      border:1px solid rgba(255,61,0,0.15);
+      border-left:none;
+      border-right:none;
+      padding:0.85rem 2rem;
+      position:relative;
+      z-index:1;
+      overflow:hidden;
+    }
+    .status-inner {
+      max-width:1400px;
+      margin:0 auto;
+      display:flex;
+      gap:4rem;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .status-item {
+      display:flex;
+      align-items:center;
+      gap:0.75rem;
+      font-family:'DM Mono',monospace;
+      font-size:0.7rem;
+      color:rgba(240,237,232,0.4);
+      letter-spacing:0.08em;
+    }
+    .status-dot { width:6px; height:6px; border-radius:50%; animation:pulse 2s infinite; }
+    .dot-green { background:#00FF88; box-shadow:0 0 8px #00FF88; }
+    .dot-yellow { background:#FFD700; box-shadow:0 0 8px #FFD700; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+    .section {
+      max-width:1400px;
+      margin:0 auto;
+      padding:6rem 2rem;
+      position:relative;
+      z-index:1;
+    }
+    .section-label {
+      font-family:'DM Mono',monospace;
+      font-size:0.7rem;
+      color:var(--fire);
+      letter-spacing:0.25em;
+      text-transform:uppercase;
+      display:flex;
+      align-items:center;
+      gap:1rem;
+      margin-bottom:4rem;
+    }
+    .section-label::after { content:''; flex:1; height:1px; background:rgba(255,61,0,0.3); }
+
+    .arch-grid { display:grid; grid-template-columns:1fr 2px 1fr; gap:0; align-items:stretch; }
+    .arch-left { padding-right:4rem; }
+    .arch-divider { background:rgba(255,61,0,0.2); }
+    .arch-right { padding-left:4rem; }
+    .arch-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(40px,5vw,65px); line-height:0.9; letter-spacing:0.02em; margin-bottom:2rem; }
+    .arch-title em { color:var(--fire); font-style:normal; }
+    .arch-desc { font-size:0.9rem; color:rgba(240,237,232,0.5); line-height:1.8; margin-bottom:2rem; }
+    .arch-stat-row { display:flex; gap:3rem; margin-top:2.5rem; }
+    .arch-stat .num { font-family:'Bebas Neue',sans-serif; font-size:2.8rem; color:var(--fire); line-height:1; }
+    .arch-stat .label { font-family:'DM Mono',monospace; font-size:0.62rem; color:rgba(240,237,232,0.35); letter-spacing:0.1em; text-transform:uppercase; }
+    .layers { display:flex; flex-direction:column; gap:3px; }
+    .layer { display:flex; align-items:center; justify-content:space-between; padding:1.2rem 1.5rem; border:1px solid rgba(255,61,0,0.12); background:#0D0D0D; transition:all 0.3s; cursor:default; position:relative; overflow:hidden; }
+    .layer::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--fire); transform:scaleY(0); transition:transform 0.3s; transform-origin:bottom; }
+    .layer:hover { background:#111; border-color:rgba(255,61,0,0.3); }
+    .layer:hover::before { transform:scaleY(1); }
+    .layer-name { font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.05em; }
+    .layer-desc { font-size:0.75rem; color:rgba(240,237,232,0.35); margin-top:0.2rem; }
+    .layer-badge { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; color:rgba(240,237,232,0.25); border:1px solid rgba(255,61,0,0.15); padding:0.25rem 0.6rem; }
+
+    .steps { display:flex; flex-direction:column; gap:0; }
+    .step { display:grid; grid-template-columns:80px 1fr; border-bottom:1px solid rgba(255,61,0,0.1); padding:2.5rem 0; position:relative; transition:background 0.2s; }
+    .step-num { font-family:'Bebas Neue',sans-serif; font-size:4rem; color:rgba(255,61,0,0.15); line-height:1; transition:color 0.3s; }
+    .step:hover .step-num { color:var(--fire); }
+    .step-title { font-family:'Bebas Neue',sans-serif; font-size:1.6rem; letter-spacing:0.04em; margin-bottom:0.75rem; }
+    .step-desc { font-size:0.875rem; color:rgba(240,237,232,0.5); line-height:1.7; max-width:600px; }
+
+    .features-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:1px; background: rgba(255,61,0,0.15); border: 1px solid rgba(255,61,0,0.15); }
+    .feature-card { background:#0D0D0D; padding:2.5rem; position:relative; overflow:hidden; transition:background 0.3s; opacity:0; transform:translateY(30px); }
+    .feature-card::before { content:''; position:absolute; top:0; left:0; width:3px; height:0; background:var(--fire); transition:height 0.4s ease; }
+    .feature-card:hover { background:#111; }
+    .feature-card:hover::before { height:100%; }
+    .feature-icon { font-size:2rem; margin-bottom:1.5rem; display:block; }
+    .feature-num { position:absolute; bottom:1.5rem; right:1.5rem; font-family:'Bebas Neue',sans-serif; font-size:3rem; color:rgba(255,61,0,0.08); line-height:1; }
+    .feature-title { font-family:'Bebas Neue',sans-serif; font-size:1.6rem; letter-spacing:0.05em; margin-bottom:0.75rem; color:var(--white); }
+    .feature-desc { font-size:0.875rem; color:rgba(240,237,232,0.55); line-height:1.7; font-weight:400; }
+    .feature-tag { display:inline-block; margin-top:1.5rem; font-family:'DM Mono',monospace; font-size:0.65rem; color:var(--fire); letter-spacing:0.15em; text-transform:uppercase; border:1px solid rgba(255,61,0,0.3); padding:0.3rem 0.7rem; }
+
+    .market-section { max-width: 1400px; margin: 0 auto; padding: 0 2rem 6rem; position: relative; z-index: 1; }
+    .featured-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1px; background: rgba(255,61,0,0.12); border: 1px solid rgba(255,61,0,0.12); margin-bottom: 1px; }
+    .featured-card { background: #0D0D0D; padding: 3rem; position: relative; overflow: hidden; }
+    .featured-badge { display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: #0D0D0D; background: var(--fire); padding: 0.35rem 0.8rem; margin-bottom: 2rem; }
+    .featured-title { font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; line-height: 1; letter-spacing: 0.02em; margin-bottom: 1rem; }
+    .featured-desc { font-size: 0.875rem; color: rgba(240,237,232,0.55); line-height: 1.7; max-width: 400px; }
+    .featured-price-row { display:flex; align-items: baseline; gap: 1rem; margin-top: 2rem; }
+    .featured-price { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--fire); }
+    .featured-price-sub { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: rgba(240,237,232,0.35); }
+    .buy-btn { display:inline-block; margin-top:1.5rem; background:var(--fire); color:#0D0D0D; font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.1em; padding:0.8rem 2.5rem; border:none; cursor:pointer; transition: background 0.2s; text-decoration:none; }
+    .buy-btn:hover { background: var(--ember); }
+    .mini-card { background:#0D0D0D; padding:2rem; border-left: 1px solid rgba(255,61,0,0.12); display:flex; flex-direction:column; justify-content:space-between; }
+    .mini-icon { font-size:2rem; margin-bottom:1rem; }
+    .mini-title { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; letter-spacing:0.05em; margin-bottom:0.5rem; }
+    .mini-desc { font-size:0.75rem; color: rgba(240,237,232,0.4); line-height:1.6; }
+    .mini-price { font-family:'Bebas Neue',sans-serif; font-size:1.8rem; color: var(--fire); margin-top:1rem; }
+    .market-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:1px; background: rgba(255,61,0,0.12); border: 1px solid rgba(255,61,0,0.12); }
+    .product-card { background:#0D0D0D; padding:0; position:relative; overflow:hidden; transition: background 0.3s; display:flex; flex-direction:column; }
+    .product-card:hover { background:#111; }
+    .product-card:hover .product-overlay { opacity:1; }
+    .product-thumb { aspect-ratio: 4/3; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+    .product-thumb-inner { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:3rem; color: rgba(255,61,0,0.2); position:relative; overflow:hidden; }
+    .thumb-a { background: linear-gradient(135deg, #0D0D0D 0%, #1a0800 100%); }
+    .thumb-b { background: linear-gradient(135deg, #0D0D0D 0%, #001a08 100%); }
+    .thumb-c { background: linear-gradient(135deg, #0D0D0D 0%, #00081a 100%); }
+    .thumb-d { background: linear-gradient(135deg, #100D0D 0%, #1a1200 100%); }
+    .thumb-pattern { position:absolute; inset:0; opacity:0.4; background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,61,0,0.06) 10px, rgba(255,61,0,0.06) 11px); }
+    .thumb-icon { font-size:2.5rem; position:relative; z-index:1; }
+    .product-overlay { position:absolute; inset:0; background: rgba(255,61,0,0.9); display:flex; align-items:center; justify-content:center; opacity:0; transition: opacity 0.3s; }
+    .overlay-btn { font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.1em; color:#0D0D0D; border:2px solid #0D0D0D; padding:0.7rem 2rem; background:transparent; cursor:pointer; transition: all 0.2s; }
+    .overlay-btn:hover { background:#0D0D0D; color: var(--fire); }
+    .product-info { padding: 1.5rem; flex:1; display:flex; flex-direction:column; }
+    .product-category { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; color: var(--fire); margin-bottom: 0.5rem; }
+    .product-name { font-family:'Bebas Neue',sans-serif; font-size:1.3rem; letter-spacing:0.05em; color: var(--white); margin-bottom: 0.5rem; }
+    .product-blurb { font-size:0.78rem; color: rgba(240,237,232,0.45); line-height:1.6; flex:1; }
+    .product-footer { display:flex; align-items:center; justify-content:space-between; margin-top:1.5rem; padding-top:1rem; border-top:1px solid rgba(255,61,0,0.15); }
+    .product-price { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color: var(--white); }
+    .product-price span { font-family:'DM Mono',monospace; font-size:0.7rem; color: rgba(240,237,232,0.4); }
+    .product-rating { font-family:'DM Mono',monospace; font-size:0.65rem; color: rgba(240,237,232,0.4); letter-spacing: 0.05em; }
+    .product-rating em { color:#FFA500; font-style:normal; }
+
+    .page-hero {
+      padding-top: 130px;
+      padding-bottom: 4rem;
+      max-width:1400px;
+      margin:0 auto;
+      padding-left:2rem;
+      padding-right:2rem;
+      position:relative;
+      z-index:1;
+      text-align:center;
+    }
+    .hero-tag {
+      font-family:'DM Mono',monospace;
+      font-size:0.7rem;
+      color:var(--fire);
+      letter-spacing:0.25em;
+      text-transform:uppercase;
+      margin-bottom:1.5rem;
+      display:inline-flex;
+      align-items:center;
+      gap:1rem;
+    }
+    .hero-title {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(60px,9vw,120px);
+      line-height:0.9;
+      letter-spacing:0.02em;
+      margin-bottom:1.5rem;
+    }
+    .hero-title em { color:var(--fire); font-style:normal; }
+    .hero-desc2 { font-size:1rem; color:rgba(240,237,232,0.5); max-width:500px; margin:0 auto 2.5rem; line-height:1.7; }
+    .toggle-wrap { display:inline-flex; align-items:center; gap:1rem; font-family:'DM Mono',monospace; font-size:0.75rem; color:rgba(240,237,232,0.5); letter-spacing:0.1em; }
+    .toggle { width:48px; height:26px; background:#1a1a1a; border:1px solid rgba(255,61,0,0.3); border-radius:0; position:relative; cursor:pointer; transition:background 0.2s; }
+    .toggle.on { background:var(--fire); border-color:var(--fire); }
+    .toggle-knob { position:absolute; top:3px; left:3px; width:18px; height:18px; background:var(--white); transition:transform 0.2s; }
+    .toggle.on .toggle-knob { transform:translateX(22px); }
+    .save-badge { background:var(--fire); color:#0D0D0D; font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; padding:0.2rem 0.5rem; }
+
+    .pricing-section { max-width:1400px; margin:0 auto; padding:3rem 2rem 6rem; position:relative; z-index:1; }
+    .pricing-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:rgba(255,61,0,0.12); border:1px solid rgba(255,61,0,0.12); position:relative; }
+    .plan-card { background:#0D0D0D; padding:2.5rem; position:relative; overflow:hidden; }
+    .plan-card.featured { background:#110800; }
+    .plan-card.featured::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--fire); }
+    .plan-badge { display:inline-block; font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; color:#0D0D0D; background:var(--fire); padding:0.25rem 0.7rem; margin-bottom:1.5rem; }
+    .plan-name { font-family:'Bebas Neue',sans-serif; font-size:2rem; letter-spacing:0.05em; color:var(--white); margin-bottom:0.5rem; }
+    .plan-tagline { font-size:0.8rem; color:rgba(240,237,232,0.4); margin-bottom:2rem; line-height:1.5; }
+    .plan-price { display:flex; align-items:baseline; gap:0.5rem; margin-bottom:0.5rem; }
+    .price-num { font-family:'Bebas Neue',sans-serif; font-size:4rem; color:var(--white); line-height:1; }
+    .plan-card.featured .price-num { color:var(--fire); }
+    .price-period { font-family:'DM Mono',monospace; font-size:0.7rem; color:rgba(240,237,232,0.35); }
+    .price-annual { font-family:'DM Mono',monospace; font-size:0.65rem; color:rgba(240,237,232,0.3); margin-bottom:2rem; }
+    .price-annual em { color:var(--fire); font-style:normal; }
+    .plan-cta { display:block; width:100%; padding:1rem 0; font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.1em; text-align:center; border:none; cursor:pointer; transition:all 0.2s; text-decoration:none; margin-bottom:2rem; }
+    .plan-cta.outline { background:transparent; color:var(--white); border:1px solid rgba(255,61,0,0.4); }
+    .plan-cta.outline:hover { background:rgba(255,61,0,0.1); border-color:var(--fire); }
+    .plan-cta.solid { background:var(--fire); color:#0D0D0D; }
+    .plan-cta.solid:hover { background:var(--ember); }
+    .plan-divider { height:1px; background:rgba(255,61,0,0.12); margin-bottom:1.5rem; }
+    .feature-list li { list-style:none; display:flex; align-items:flex-start; gap:0.75rem; font-size:0.82rem; color:rgba(240,237,232,0.55); margin-bottom:0.85rem; line-height:1.5; }
+    .feature-list li .check { color:var(--fire); font-size:0.75rem; flex-shrink:0; margin-top:2px; }
+    .feature-list li .cross { color:rgba(240,237,232,0.2); font-size:0.75rem; flex-shrink:0; margin-top:2px; }
+    .feature-list li.dim { color:rgba(240,237,232,0.25); }
+    .plan-note { margin-top:1.5rem; font-family:'DM Mono',monospace; font-size:0.65rem; color:rgba(240,237,232,0.25); letter-spacing:0.05em; line-height:1.6; }
+    .compare-section { max-width:1400px; margin:0 auto; padding:0 2rem 6rem; position:relative; z-index:1; }
+    .compare-label { font-family:'DM Mono',monospace; font-size:0.7rem; color:var(--fire); letter-spacing:0.25em; text-transform:uppercase; display:flex; align-items:center; gap:1rem; margin-bottom:3rem; }
+    .compare-label::after { content:''; flex:1; height:1px; background:rgba(255,61,0,0.3); }
+    .compare-table { width:100%; border-collapse:collapse; }
+    .compare-table th { font-family:'Bebas Neue',sans-serif; font-size:1.2rem; letter-spacing:0.05em; color:var(--white); padding:1rem 1.5rem; text-align:left; border-bottom:1px solid rgba(255,61,0,0.2); }
+    .compare-table th:first-child { color:rgba(240,237,232,0.3); font-size:0.7rem; font-family:'DM Mono',monospace; letter-spacing:0.1em; }
+    .compare-table th.highlight { color:var(--fire); }
+    .compare-table td { padding:0.9rem 1.5rem; font-size:0.82rem; color:rgba(240,237,232,0.55); border-bottom:1px solid rgba(255,255,255,0.04); font-family:'DM Mono',monospace; }
+    .compare-table td.highlight { color:var(--white); background:rgba(255,61,0,0.04); }
+    .compare-table td.feature-name { color:rgba(240,237,232,0.7); font-size:0.8rem; }
+    .compare-table tr:hover td { background:rgba(255,255,255,0.02); }
+    .check-y { color:var(--fire); }
+    .check-n { color:rgba(255,255,255,0.15); }
+
+    .login-shell { max-width: 1400px; margin: 0 auto; padding: 6rem 2rem; position: relative; z-index:1; }
+    .login-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+    .login-card { border:1px solid rgba(255,61,0,0.12); background:#0D0D0D; padding: 2.5rem; }
+    .login-card h3 { font-family:'Bebas Neue',sans-serif; font-size:2.2rem; letter-spacing:0.05em; margin-bottom: 0.75rem; }
+    .login-card p { color: rgba(240,237,232,0.5); line-height: 1.7; font-size: 0.9rem; }
+    .login-card a { color: var(--fire); text-decoration:none; }
+    .login-card a:hover { text-decoration: underline; }
+    .login-form { margin-top: 1.5rem; }
+    .login-form label { font-family:'DM Mono',monospace; font-size: 0.7rem; letter-spacing:0.1em; color: rgba(240,237,232,0.45); display:block; margin: 0.9rem 0 0.4rem; text-transform: uppercase; }
+    .login-form input { width: 100%; padding: 0.85rem 0.9rem; background: transparent; border: 1px solid rgba(255,61,0,0.25); color: var(--white); outline: none; font-family: 'DM Mono', monospace; }
+    .login-form input:focus { border-color: var(--fire); }
+    .login-form .row { display:flex; align-items:center; justify-content:space-between; gap: 1rem; margin-top: 0.9rem; }
+    .login-form .row a { font-family:'DM Mono',monospace; font-size: 0.75rem; letter-spacing: 0.05em; color: rgba(240,237,232,0.55); }
+    .login-form .row a:hover { color: var(--fire); }
+    .login-form button { margin-top: 1.25rem; width: 100%; }
+
+    footer { border-top:1px solid rgba(255,61,0,0.2); padding:2rem; text-align:center; font-family:'DM Mono',monospace; font-size:0.7rem; color:rgba(240,237,232,0.25); letter-spacing:0.1em; position:relative; z-index:1; }
+
+    @media(max-width:1100px) { .market-grid { grid-template-columns: repeat(2, 1fr); } .featured-row { grid-template-columns: 1fr; } }
+    @media(max-width:900px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .nav-links { display:none; }
+      .auth-links { display:none; }
+      .arch-grid { grid-template-columns:1fr; }
+      .arch-divider { display:none; }
+      .arch-left { padding-right:0; margin-bottom:3rem; }
+      .arch-right { padding-left:0; }
+      .step { grid-template-columns:50px 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .login-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo">SMOKE<span>SCREEN</span> ENGINE</div>
+    <div class="nav-links">
+      <a href="#product" data-page="product" class="nav-link">PRODUCT</a>
+      <a href="#features" data-page="features" class="nav-link">FEATURES</a>
+      <a href="#marketplace" data-page="marketplace" class="nav-link">MARKETPLACE</a>
+      <a href="#pricing" data-page="pricing" class="nav-link">PRICING</a>
+    </div>
+    <div class="auth-links">
+      <a href="/auth/login">LOGIN</a>
+      <a href="/auth/register">REGISTER</a>
+      <a href="/dashboard">PROFILE</a>
+      <a href="/auth/login" id="logoutLink">LOGOUT</a>
+    </div>
+  </div>
+</nav>
+
+<main style="padding-top:64px;">
+
+  <section id="page-product" class="page">
+    <div class="hero">
+      <div class="hero-bg-text">ENGINE</div>
+      <div class="hero-eyebrow">SmokeScreen ENGINE — v4.2</div>
+      <h1 class="hero-h1">THE PLATFORM<br>THAT <em>DOESN'T</em><br>FLINCH</h1>
+      <div class="hero-bottom">
+        <p class="hero-desc">Next-generation SaaS infrastructure built for teams who need real-time performance, airtight security, and zero excuses. One platform. Every workload.</p>
+        <div class="hero-actions">
+          <a href="#pricing" data-page="pricing" class="btn-primary">START FOR FREE →</a>
+          <a href="#features" data-page="features" class="btn-ghost">SEE FEATURES</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-inner">
+        <div class="status-item"><div class="status-dot dot-green"></div>ALL SYSTEMS OPERATIONAL</div>
+        <div class="status-item"><div class="status-dot dot-green"></div>API: 14ms LATENCY</div>
+        <div class="status-item"><div class="status-dot dot-green"></div>99.98% UPTIME 30D</div>
+        <div class="status-item"><div class="status-dot dot-yellow"></div>CDN EAST: MAINTENANCE 03:00 UTC</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Platform Architecture</div>
+      <div class="arch-grid">
+        <div class="arch-left">
+          <h2 class="arch-title">ENGINEERED<br>FROM THE<br><em>GROUND UP</em></h2>
+          <p class="arch-desc">Every layer of SmokeScreen ENGINE was designed with one obsession: performance under pressure. From the distributed event bus to the AI inference runtime, every component is built to scale horizontally and fail gracefully.</p>
+          <p class="arch-desc">No bolt-on integrations. No third-party black boxes. One cohesive system you can reason about, monitor, and trust.</p>
+          <div class="arch-stat-row">
+            <div class="arch-stat"><div class="num">40+</div><div class="label">Edge Nodes</div></div>
+            <div class="arch-stat"><div class="num">&lt;5ms</div><div class="label">P99 Latency</div></div>
+            <div class="arch-stat"><div class="num">99.99%</div><div class="label">Uptime SLA</div></div>
+          </div>
+        </div>
+        <div class="arch-divider"></div>
+        <div class="arch-right">
+          <div class="layers">
+            <div class="layer"><div><div class="layer-name">EDGE MESH</div><div class="layer-desc">Global CDN + real-time routing</div></div><div class="layer-badge">Layer 1</div></div>
+            <div class="layer"><div><div class="layer-name">API GATEWAY</div><div class="layer-desc">Unified REST / GraphQL / gRPC</div></div><div class="layer-badge">Layer 2</div></div>
+            <div class="layer"><div><div class="layer-name">EVENT BUS</div><div class="layer-desc">High-throughput distributed queue</div></div><div class="layer-badge">Layer 3</div></div>
+            <div class="layer"><div><div class="layer-name">RUNTIME ENGINE</div><div class="layer-desc">Workflow + automation core</div></div><div class="layer-badge">Layer 4</div></div>
+            <div class="layer"><div><div class="layer-name">AI INFERENCE</div><div class="layer-desc">Edge ML model execution</div></div><div class="layer-badge">Layer 5</div></div>
+            <div class="layer"><div><div class="layer-name">DATA STORE</div><div class="layer-desc">Distributed OLTP + OLAP</div></div><div class="layer-badge">Layer 6</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" style="padding-top:0;">
+      <div class="section-label">How It Works</div>
+      <div class="steps">
+        <div class="step"><div class="step-num">01</div><div><div class="step-title">CONNECT YOUR STACK</div><p class="step-desc">Plug in your existing services via our API gateway or native SDK. Works with every major cloud provider, database, and messaging system out of the box. Setup takes minutes, not weeks.</p></div></div>
+        <div class="step"><div class="step-num">02</div><div><div class="step-title">DEFINE YOUR WORKFLOWS</div><p class="step-desc">Use the visual builder or raw YAML config to define how data flows through your system. Automate decisions, transformations, and triggers at any scale.</p></div></div>
+        <div class="step"><div class="step-num">03</div><div><div class="step-title">DEPLOY TO THE EDGE</div><p class="step-desc">Push your configurations live across 40+ global nodes in under 30 seconds. Zero-downtime deployments, automatic rollback, and canary support built in.</p></div></div>
+        <div class="step"><div class="step-num">04</div><div><div class="step-title">MONITOR EVERYTHING</div><p class="step-desc">Full-stack observability from day one. Distributed tracing, custom dashboards, real-time anomaly detection, and AI-powered root cause analysis keep you in control.</p></div></div>
+      </div>
+      <div style="margin-top: 3rem;">
+        <a href="#pricing" data-page="pricing" class="btn-primary">GET STARTED FREE →</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="page-features" class="page">
+    <section style="position:relative; z-index:1;">
+      <div class="hero" style="align-items:flex-end; padding-bottom:5rem;">
+        <div class="hero-bg-text" style="top: 120px; right: 2rem; transform:none; font-size: clamp(120px, 20vw, 260px); color: rgba(255,61,0,0.06);">01</div>
+        <div>
+          <div class="hero-eyebrow" style="margin-bottom: 1.5rem;">Platform Capabilities</div>
+          <h1 class="hero-h1" style="font-size: clamp(60px, 10vw, 120px); line-height: 0.9;">BUILT TO<br><em>DOMINATE</em><br>EVERY STACK</h1>
+          <p class="hero-desc" style="margin-top:2rem; max-width:480px;">Military-grade tooling with zero compromise on speed. Every feature is engineered to push the limits of what's possible at scale.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-label">Core Features — 09</div>
+      <div class="features-grid" id="featuresGrid">
+        <div class="feature-card"><span class="feature-icon">⚡</span><div class="feature-num">01</div><div class="feature-title">Real-Time Engine</div><p class="feature-desc">Sub-millisecond event processing with distributed state sync across all nodes. No lag. No compromise.</p><span class="feature-tag">Core</span></div>
+        <div class="feature-card"><span class="feature-icon">🔐</span><div class="feature-num">02</div><div class="feature-title">Zero-Trust Auth</div><p class="feature-desc">End-to-end encryption with dynamic token rotation, SSO, MFA, and role-based permission layers baked in from day one.</p><span class="feature-tag">Security</span></div>
+        <div class="feature-card"><span class="feature-icon">📡</span><div class="feature-num">03</div><div class="feature-title">Live Data Pipelines</div><p class="feature-desc">Push millions of events per second through customizable pipelines. Transform, filter, and route with a visual builder or raw config.</p><span class="feature-tag">Data</span></div>
+        <div class="feature-card"><span class="feature-icon">🧠</span><div class="feature-num">04</div><div class="feature-title">AI Inference Layer</div><p class="feature-desc">Deploy custom ML models directly into the ENGINE runtime. Inference at the edge — no cold starts, no roundtrips.</p><span class="feature-tag">AI/ML</span></div>
+        <div class="feature-card"><span class="feature-icon">🗂️</span><div class="feature-num">05</div><div class="feature-title">Modular Workflow Builder</div><p class="feature-desc">Drag, wire, and deploy complex automation workflows. Every block is versioned, auditable, and rollback-safe.</p><span class="feature-tag">Automation</span></div>
+        <div class="feature-card"><span class="feature-icon">📊</span><div class="feature-num">06</div><div class="feature-title">Observability Suite</div><p class="feature-desc">Full-stack tracing, custom dashboards, and anomaly detection. Know everything happening inside your system at all times.</p><span class="feature-tag">Monitoring</span></div>
+        <div class="feature-card"><span class="feature-icon">🌐</span><div class="feature-num">07</div><div class="feature-title">Global CDN Mesh</div><p class="feature-desc">40+ edge nodes. Automatic geo-routing, failover, and intelligent caching. Maximum performance, anywhere.</p><span class="feature-tag">Infrastructure</span></div>
+        <div class="feature-card"><span class="feature-icon">🔌</span><div class="feature-num">08</div><div class="feature-title">Unified API Gateway</div><p class="feature-desc">One control plane for every integration. REST, GraphQL, gRPC — all managed, secured, and rate-limited from a single interface.</p><span class="feature-tag">API</span></div>
+        <div class="feature-card"><span class="feature-icon">🚀</span><div class="feature-num">09</div><div class="feature-title">Instant Deploy</div><p class="feature-desc">From commit to live in under 30 seconds. Blue/green deployments, canary rollouts, and automated smoke tests included.</p><span class="feature-tag">DevOps</span></div>
+      </div>
+    </section>
+
+    <div class="status-bar" style="background: var(--fire); border-color: var(--fire);">
+      <div class="status-inner" style="justify-content: space-between;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size: clamp(1.8rem, 4vw, 3rem); letter-spacing: 0.05em; color:#0D0D0D; line-height:1.1;">READY TO SEE IT IN ACTION?<br>SPIN UP YOUR INSTANCE NOW.</div>
+        <a href="#pricing" data-page="pricing" class="btn-ghost" style="background:#0D0D0D; border:none; color: var(--fire);">VIEW PRICING →</a>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="section-label">Integrations</div>
+      <div style="display:flex; flex-wrap:wrap; gap:1px; background:rgba(255,61,0,0.1); border:1px solid rgba(255,61,0,0.1); margin-top:3rem;">
+        <div style="background:#0D0D0D; padding:1.5rem 2rem; font-family:'DM Mono',monospace; font-size:0.8rem; color:rgba(240,237,232,0.4); letter-spacing:0.1em;">STRIPE</div>
+        <div style="background:#0D0D0D; padding:1.5rem 2rem; font-family:'DM Mono',monospace; font-size:0.8rem; color:rgba(240,237,232,0.4); letter-spacing:0.1em;">AWS</div>
+        <div style="background:#0D0D0D; padding:1.5rem 2rem; font-family:'DM Mono',monospace; font-size:0.8rem; color:rgba(240,237,232,0.4); letter-spacing:0.1em;">GITHUB</div>
+        <div style="background:#0D0D0D; padding:1.5rem 2rem; font-family:'DM Mono',monospace; font-size:0.8rem; color:rgba(240,237,232,0.4); letter-spacing:0.1em;">SLACK</div>
+        <div style="background:#0D0D0D; padding:1.5rem 2rem; font-family:'DM Mono',monospace; font-size:0.8rem; color:rgba(240,237,232,0.4); letter-spacing:0.1em;">DATADOG</div>
+        <div style="background:#0D0D0D; padding:1.5rem 2rem; font-family:'DM Mono',monospace; font-size:0.8rem; color:rgba(240,237,232,0.4); letter-spacing:0.1em;">POSTGRES</div>
+        <div style="background:#0D0D0D; padding:1.5rem 2rem; font-family:'DM Mono',monospace; font-size:0.8rem; color:rgba(240,237,232,0.4); letter-spacing:0.1em;">REDIS</div>
+        <div style="background:#0D0D0D; padding:1.5rem 2rem; font-family:'DM Mono',monospace; font-size:0.8rem; color:rgba(240,237,232,0.4); letter-spacing:0.1em;">KAFKA</div>
+        <div style="background:#0D0D0D; padding:1.5rem 2rem; font-family:'DM Mono',monospace; font-size:0.8rem; color:rgba(240,237,232,0.4); letter-spacing:0.1em;">VERCEL</div>
+        <div style="background:#0D0D0D; padding:1.5rem 2rem; font-family:'DM Mono',monospace; font-size:0.8rem; color:rgba(240,237,232,0.4); letter-spacing:0.1em;">CLOUDFLARE</div>
+        <div style="background:#0D0D0D; padding:1.5rem 2rem; font-family:'DM Mono',monospace; font-size:0.8rem; color:rgba(240,237,232,0.4); letter-spacing:0.1em;">TWILIO</div>
+        <div style="background:#0D0D0D; padding:1.5rem 2rem; font-family:'DM Mono',monospace; font-size:0.8rem; color:rgba(240,237,232,0.4); letter-spacing:0.1em;">SENDGRID</div>
+      </div>
+    </section>
+  </section>
+
+  <section id="page-marketplace" class="page">
+    <div class="section" style="padding-top: 7rem; padding-bottom: 2rem;">
+      <div class="section-label">Digital Marketplace</div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items:end;">
+        <div>
+          <h2 style="font-family:'Bebas Neue',sans-serif; font-size: clamp(60px, 9vw, 110px); line-height: 0.9; letter-spacing:0.02em;">PREMIUM<br><span style="color: var(--fire);">ASSETS</span><br>& MODULES</h2>
+        </div>
+        <div>
+          <p style="color: rgba(240,237,232,0.55); font-size: 0.9rem; line-height: 1.8;">Plug-and-play extensions, templates, integrations, and tools built by the ENGINE community. Every product is tested, verified, and ready to deploy.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="market-section">
+      <div class="featured-row">
+        <div class="featured-card">
+          <div class="featured-badge">⭐ EDITOR'S PICK</div>
+          <div class="featured-title">COMMAND DASHBOARD<br>PRO SUITE</div>
+          <p class="featured-desc">The ultimate real-time ops dashboard for SmokeScreen. 30+ components, live data widgets, custom theming, and drag-and-drop layout. Used by 800+ teams.</p>
+          <div class="featured-price-row"><div class="featured-price">$149</div><div class="featured-price-sub">ONE-TIME LICENSE</div></div>
+          <a href="#" class="buy-btn">ADD TO STACK →</a>
+        </div>
+        <div class="mini-card"><div><div class="mini-icon">🤖</div><div class="mini-title">AI ANALYST BOT</div><p class="mini-desc">Plug-in inference module. Anomaly detection + natural language reporting for your pipelines.</p></div><div class="mini-price">$89</div></div>
+        <div class="mini-card"><div><div class="mini-icon">🔒</div><div class="mini-title">VAULT SECURITY PACK</div><p class="mini-desc">Advanced encryption layer, secret rotation, audit logs. Drop in within minutes.</p></div><div class="mini-price">$69</div></div>
+      </div>
+
+      <div class="market-grid">
+        <div class="product-card"><div class="product-thumb"><div class="product-thumb-inner thumb-a"><div class="thumb-pattern"></div><span class="thumb-icon">📊</span></div><div class="product-overlay"><button class="overlay-btn">VIEW PRODUCT</button></div></div><div class="product-info"><div class="product-category">UI Kit</div><div class="product-name">METRICS BOARD X</div><p class="product-blurb">15 analytics widgets. Real-time data binding. Dark and light themes.</p><div class="product-footer"><div class="product-price">$39 <span>/license</span></div><div class="product-rating"><em>★</em> 4.9 (214)</div></div></div></div>
+        <div class="product-card"><div class="product-thumb"><div class="product-thumb-inner thumb-b"><div class="thumb-pattern"></div><span class="thumb-icon">⚙️</span></div><div class="product-overlay"><button class="overlay-btn">VIEW PRODUCT</button></div></div><div class="product-info"><div class="product-category">Automation</div><div class="product-name">FLOW ORCHESTRATOR</div><p class="product-blurb">Visual workflow engine with 60+ pre-built nodes. Webhooks, schedules, branching.</p><div class="product-footer"><div class="product-price">$59 <span>/license</span></div><div class="product-rating"><em>★</em> 4.8 (187)</div></div></div></div>
+        <div class="product-card"><div class="product-thumb"><div class="product-thumb-inner thumb-c"><div class="thumb-pattern"></div><span class="thumb-icon">🌐</span></div><div class="product-overlay"><button class="overlay-btn">VIEW PRODUCT</button></div></div><div class="product-info"><div class="product-category">Integration</div><div class="product-name">STRIPE CONNECTOR</div><p class="product-blurb">Full Stripe billing integration. Subscriptions, invoices, webhooks, reconciliation.</p><div class="product-footer"><div class="product-price">FREE</div><div class="product-rating"><em>★</em> 5.0 (430)</div></div></div></div>
+        <div class="product-card"><div class="product-thumb"><div class="product-thumb-inner thumb-d"><div class="thumb-pattern"></div><span class="thumb-icon">🧪</span></div><div class="product-overlay"><button class="overlay-btn">VIEW PRODUCT</button></div></div><div class="product-info"><div class="product-category">Testing</div><div class="product-name">SMOKE TESTER PRO</div><p class="product-blurb">Automated end-to-end testing suite. CI/CD hooks, coverage reports, snapshot diffs.</p><div class="product-footer"><div class="product-price">$49 <span>/license</span></div><div class="product-rating"><em>★</em> 4.7 (96)</div></div></div></div>
+        <div class="product-card"><div class="product-thumb"><div class="product-thumb-inner thumb-a"><div class="thumb-pattern"></div><span class="thumb-icon">🗺️</span></div><div class="product-overlay"><button class="overlay-btn">VIEW PRODUCT</button></div></div><div class="product-info"><div class="product-category">UI Kit</div><div class="product-name">GEO HEAT MAP</div><p class="product-blurb">Interactive global maps. Cluster visualizations, region drill-down, live data layers.</p><div class="product-footer"><div class="product-price">$29 <span>/license</span></div><div class="product-rating"><em>★</em> 4.6 (73)</div></div></div></div>
+        <div class="product-card"><div class="product-thumb"><div class="product-thumb-inner thumb-b"><div class="thumb-pattern"></div><span class="thumb-icon">📬</span></div><div class="product-overlay"><button class="overlay-btn">VIEW PRODUCT</button></div></div><div class="product-info"><div class="product-category">Integration</div><div class="product-name">NOTIFY ENGINE</div><p class="product-blurb">Multi-channel notifications. Email, SMS, push, Slack. Template builder included.</p><div class="product-footer"><div class="product-price">$35 <span>/license</span></div><div class="product-rating"><em>★</em> 4.9 (155)</div></div></div></div>
+        <div class="product-card"><div class="product-thumb"><div class="product-thumb-inner thumb-c"><div class="thumb-pattern"></div><span class="thumb-icon">🛡️</span></div><div class="product-overlay"><button class="overlay-btn">VIEW PRODUCT</button></div></div><div class="product-info"><div class="product-category">Security</div><div class="product-name">THREAT SCANNER</div><p class="product-blurb">Real-time threat detection. IP reputation, rate-limit rules, and anomaly alerts.</p><div class="product-footer"><div class="product-price">$79 <span>/license</span></div><div class="product-rating"><em>★</em> 4.8 (61)</div></div></div></div>
+        <div class="product-card"><div class="product-thumb"><div class="product-thumb-inner thumb-d"><div class="thumb-pattern"></div><span class="thumb-icon">🧬</span></div><div class="product-overlay"><button class="overlay-btn">VIEW PRODUCT</button></div></div><div class="product-info"><div class="product-category">AI Module</div><div class="product-name">VECTOR SEARCH</div><p class="product-blurb">Semantic search engine plugin. Embeddings, similarity scoring, and RAG-ready retrieval.</p><div class="product-footer"><div class="product-price">$99 <span>/license</span></div><div class="product-rating"><em>★</em> 4.9 (44)</div></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="page-pricing" class="page">
+    <div class="page-hero">
+      <div class="hero-tag">Transparent Pricing</div>
+      <h1 class="hero-title">PICK YOUR<br><em>WEAPON</em></h1>
+      <p class="hero-desc2">No hidden fees. No rate limit games. Scale from solo to enterprise without breaking your budget.</p>
+      <div class="toggle-wrap">
+        <span>MONTHLY</span>
+        <div class="toggle on" id="billingToggle"><div class="toggle-knob"></div></div>
+        <span>ANNUAL</span>
+        <span class="save-badge">SAVE 20%</span>
+      </div>
+    </div>
+
+    <div class="pricing-section">
+      <div class="pricing-grid">
+        <div class="plan-card">
+          <div class="plan-name">STARTER</div>
+          <div class="plan-tagline">For builders and solo developers moving fast.</div>
+          <div class="plan-price"><div class="price-num" data-monthly="0" data-annual="0">$0</div><div class="price-period">/ mo</div></div>
+          <div class="price-annual">Free forever. No card required.</div>
+          <a href="#" class="plan-cta outline">START FREE →</a>
+          <div class="plan-divider"></div>
+          <ul class="feature-list">
+            <li><span class="check">■</span> 3 active projects</li>
+            <li><span class="check">■</span> 50K events/month</li>
+            <li><span class="check">■</span> 1 team member</li>
+            <li><span class="check">■</span> Community support</li>
+            <li><span class="check">■</span> Basic analytics</li>
+            <li class="dim"><span class="cross">✕</span> Custom domains</li>
+            <li class="dim"><span class="cross">✕</span> AI inference layer</li>
+            <li class="dim"><span class="cross">✕</span> SLA guarantee</li>
+          </ul>
+        </div>
+
+        <div class="plan-card featured">
+          <div class="plan-badge">MOST POPULAR</div>
+          <div class="plan-name">PRO</div>
+          <div class="plan-tagline">For serious teams shipping production workloads.</div>
+          <div class="plan-price"><div class="price-num" data-monthly="79" data-annual="63">$63</div><div class="price-period">/ mo</div></div>
+          <div class="price-annual">Billed annually — <em>save $192/yr</em></div>
+          <a href="#" class="plan-cta solid">GET PRO →</a>
+          <div class="plan-divider"></div>
+          <ul class="feature-list">
+            <li><span class="check">■</span> Unlimited projects</li>
+            <li><span class="check">■</span> 5M events/month</li>
+            <li><span class="check">■</span> Up to 10 members</li>
+            <li><span class="check">■</span> Priority email support</li>
+            <li><span class="check">■</span> Full analytics suite</li>
+            <li><span class="check">■</span> Custom domains</li>
+            <li><span class="check">■</span> AI inference layer</li>
+            <li class="dim"><span class="cross">✕</span> SLA guarantee</li>
+          </ul>
+          <div class="plan-note">14-day free trial. Cancel anytime.</div>
+        </div>
+
+        <div class="plan-card">
+          <div class="plan-name">ENTERPRISE</div>
+          <div class="plan-tagline">For organizations that demand maximum control and scale.</div>
+          <div class="plan-price"><div class="price-num">CUSTOM</div></div>
+          <div class="price-annual">Volume discounts. Custom SLAs. Dedicated infra.</div>
+          <a href="#" class="plan-cta outline">CONTACT SALES →</a>
+          <div class="plan-divider"></div>
+          <ul class="feature-list">
+            <li><span class="check">■</span> Unlimited everything</li>
+            <li><span class="check">■</span> Unlimited events</li>
+            <li><span class="check">■</span> Unlimited members</li>
+            <li><span class="check">■</span> 24/7 dedicated support</li>
+            <li><span class="check">■</span> Advanced analytics</li>
+            <li><span class="check">■</span> Custom domains + SSL</li>
+            <li><span class="check">■</span> AI inference + training</li>
+            <li><span class="check">■</span> 99.99% SLA guarantee</li>
+          </ul>
+          <div class="plan-note">SSO, SAML, SCIM, custom data residency, and on-prem available.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="login-shell">
+      <div class="login-grid">
+        <div class="login-card">
+          <h3>SIGN IN</h3>
+          <p>Sign in to your SmokeScreen ENGINE account.</p>
+          <div class="login-form">
+            <label for="email">Email</label>
+            <input id="email" type="email" placeholder="you@company.com" autocomplete="email" />
+            <label for="password">Password</label>
+            <input id="password" type="password" placeholder="••••••••••" autocomplete="current-password" />
+            <div class="row"><a href="/auth/forgot">FORGOT?</a><a href="/auth/register">CREATE ONE →</a></div>
+            <a href="/auth/login" class="btn-primary" style="width:100%; text-align:center; margin-top:1.25rem;">SIGN IN →</a>
+          </div>
+        </div>
+        <div class="login-card">
+          <h3>JOIN THE ENGINE</h3>
+          <p>Join thousands of teams already running on ENGINE.</p>
+          <div style="margin-top: 1.25rem;">
+            <a class="btn-primary" href="/auth/register">CREATE ACCOUNT →</a>
+            <a class="btn-ghost" href="#product" data-page="product" style="margin-left: 0.75rem;">BACK TO PRODUCT</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <footer>© 2025 SMOKESCREEN ENGINE — ALL SYSTEMS OPERATIONAL — v4.2.1</footer>
+
+</main>
+
+<script>
+  function setActivePage(page) {
+    const pages = ['product', 'features', 'marketplace', 'pricing'];
+    const next = pages.includes(page) ? page : 'product';
+    pages.forEach(p => {
+      const el = document.getElementById(`page-${p}`);
+      if (!el) return;
+      el.classList.toggle('active', p === next);
+    });
+    document.querySelectorAll('.nav-link').forEach(a => {
+      a.classList.toggle('active', a.getAttribute('data-page') === next);
+    });
+    if (next === 'features') {
+      const cards = document.querySelectorAll('#featuresGrid .feature-card');
+      cards.forEach((c) => {
+        c.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        c.style.opacity = '1';
+        c.style.transform = 'translateY(0)';
+      });
+    }
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
+  function parseHash() {
+    const h = (window.location.hash || '').replace('#', '').trim().toLowerCase();
+    return h || 'product';
+  }
+
+  window.addEventListener('hashchange', () => setActivePage(parseHash()));
+  document.querySelectorAll('[data-page]').forEach(a => {
+    a.addEventListener('click', () => {
+      const p = a.getAttribute('data-page');
+      if (!p) return;
+      window.location.hash = p;
+    });
+  });
+
+  const toggle = document.getElementById('billingToggle');
+  let isAnnual = true;
+  if (toggle) {
+    toggle.addEventListener('click', () => {
+      isAnnual = !isAnnual;
+      toggle.classList.toggle('on', isAnnual);
+      document.querySelectorAll('.price-num[data-monthly]').forEach(el => {
+        const val = isAnnual ? el.dataset.annual : el.dataset.monthly;
+        el.textContent = val == 0 ? '$0' : `$${val}`;
+      });
+    });
+  }
+
+  async function logout() {
+    try {
+      const csrfRes = await fetch('/auth/csrf', { credentials: 'include' });
+      if (!csrfRes.ok) return;
+      const csrfData = await csrfRes.json();
+      await fetch('/auth/logout', { method: 'POST', headers: { 'csrf-token': csrfData.csrfToken }, credentials: 'include' });
+    } catch (e) {
+    }
+  }
+
+  const logoutLink = document.getElementById('logoutLink');
+  if (logoutLink) {
+    logoutLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await logout();
+      window.location.href = '/auth/login';
+    });
+  }
+
+  setActivePage(parseHash());
+</script>
+
+</body>
+</html>
