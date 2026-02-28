@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "I:\\UI_GUI\\ENGINE\\SmokeScreenEngineGUI.csproj": {}
+    "I:\\UI_GUI\\SmokeScreen-ENGINE\\ENGINE\\SmokeScreenEngineGUI.csproj": {}
   },
   "projects": {
-    "I:\\UI_GUI\\ENGINE\\SmokeScreenEngineGUI.csproj": {
+    "I:\\UI_GUI\\SmokeScreen-ENGINE\\ENGINE\\SmokeScreenEngineGUI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "I:\\UI_GUI\\ENGINE\\SmokeScreenEngineGUI.csproj",
+        "projectUniqueName": "I:\\UI_GUI\\SmokeScreen-ENGINE\\ENGINE\\SmokeScreenEngineGUI.csproj",
         "projectName": "SmokeScreenEngine",
-        "projectPath": "I:\\UI_GUI\\ENGINE\\SmokeScreenEngineGUI.csproj",
+        "projectPath": "I:\\UI_GUI\\SmokeScreen-ENGINE\\ENGINE\\SmokeScreenEngineGUI.csproj",
         "packagesPath": "C:\\Users\\ghost\\.nuget\\packages\\",
-        "outputPath": "I:\\UI_GUI\\ENGINE\\obj\\",
+        "outputPath": "I:\\UI_GUI\\SmokeScreen-ENGINE\\ENGINE\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SmokeScreenEngine")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1872c65d85b2fba9d8164f9302022153b0189902")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+91f70d29d44d5bcedd222c129974652f04c3204f")]
 [assembly: System.Reflection.AssemblyProductAttribute("SmokeScreenEngine")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SmokeScreenEngine")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
