@@ -292,6 +292,11 @@ app.get('/auth/csrf', csrfProtection, (req, res) => {
   return res.json({ csrfToken: req.csrfToken() });
 });
 
+// ─── ENGINE marketing page ────────────────────────────────────────
+app.get('/engine', (req, res) => {
+  res.sendFile(path.join(__dirname, 'engine.html'));
+});
+
 // ─── Discord OAuth ENGINE landing page ────────────────────────────────────────
 app.get('/auth/discord/engine-landing', (req, res) => {
   res.sendFile(path.join(__dirname, 'engine-landing.html'));

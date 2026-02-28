@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ENGINE — Real-Time Distributed System</title>
+  <style>
+    :root{color-scheme:dark;--bg:#03040a;--panel:#0b0e18;--card:#151826;--text:#f0ede8;--muted:#97a1bd;--accent:#00e5ff;--glow:#00e5ff33}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;line-height:1.6}
+    .container{max-width:1200px;margin:0 auto;padding:0 24px}
+    header{padding:80px 0 40px;text-align:center}
+    h1{font-size:clamp(2rem,5vw,4rem);margin:0 0 16px;letter-spacing:2px;background:linear-gradient(90deg,var(--accent),var(--text));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .subtitle{font-size:1.25rem;color:var(--muted);margin:0 0 32px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;margin-bottom:80px}
+    .card{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:32px;position:relative;overflow:hidden}
+    .card::before{content:'';position:absolute;top:0;left:0;width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .3s}
+    .card:hover::before{opacity:1}
+    .icon{font-size:2.5rem;margin-bottom:16px}
+    h2{font-size:1.25rem;margin:0 0 8px;letter-spacing:1px}
+    p{margin:0;color:var(--muted)}
+    footer{text-align:center;padding:40px 0;color:var(--muted);font-size:0.875rem}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .glow{box-shadow:0 0 24px var(--glow);transition:box-shadow .3s}
+    .card:hover{box-shadow:0 0 32px var(--glow)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>ENGINE</h1>
+      <p class="subtitle">Real-Time Distributed System. Sub‑millisecond event processing with zero‑trust security.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="grid">
+      <div class="card glow">
+        <div class="icon">⚡</div>
+        <h2>Real-Time Engine</h2>
+        <p>Sub‑millisecond event processing with distributed state sync across all nodes. No lag. No compromise.</p>
+      </div>
+
+      <div class="card glow">
+        <div class="icon">🔐</div>
+        <h2>Zero-Trust Auth</h2>
+        <p>End-to-end encryption with dynamic token rotation, SSO, MFA, and role-based permission layers baked in from day one.</p>
+      </div>
+
+      <div class="card glow">
+        <div class="icon">📡</div>
+        <h2>Live Data Pipelines</h2>
+        <p>Push millions of events per second through customizable pipelines. Transform, filter, and route with a visual builder or raw config.</p>
+      </div>
+
+      <div class="card glow">
+        <div class="icon">🧠</div>
+        <h2>AI Inference Layer</h2>
+        <p>Deploy custom ML models directly into the ENGINE runtime. Inference at the edge — no cold starts, no roundtrips.</p>
+      </div>
+
+      <div class="card glow">
+        <div class="icon">🗂️</div>
+        <h2>Modular Workflow Builder</h2>
+        <p>Drag, wire, and deploy complex automation workflows. Every block is versioned, auditable, and rollback‑safe.</p>
+      </div>
+
+      <div class="card glow">
+        <div class="icon">📊</div>
+        <h2>Observability Suite</h2>
+        <p>Full‑stack tracing, custom dashboards, and anomaly detection. Know everything happening inside your system at all times.</p>
+      </div>
+
+      <div class="card glow">
+        <div class="icon">🌐</div>
+        <h2>Global CDN Mesh</h2>
+        <p>40+ edge nodes. Automatic geo‑routing, failover, and intelligent caching. Maximum performance, anywhere.</p>
+      </div>
+
+      <div class="card glow">
+        <div class="icon">🔌</div>
+        <h2>Unified API Gateway</h2>
+        <p>One control plane for every integration. REST, GraphQL, gRPC — all managed, secured, and rate‑limited from a single interface.</p>
+      </div>
+
+      <div class="card glow">
+        <div class="icon">🚀</div>
+        <h2>Instant Deploy</h2>
+        <p>From commit to live in under 30 seconds. Blue/green deployments, canary rollouts, and automated smoke tests included.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 SmokeScreen ENGINE. Built for speed, security, and scale.</p>
+    </div>
+  </footer>
+</body>
+</html>
