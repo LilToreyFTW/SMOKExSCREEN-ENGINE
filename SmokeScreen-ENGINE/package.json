@@ -17,5 +17,9 @@
     "morgan": "^1.10.0",
     "pg": "^8.11.5",
     "uuid": "^9.0.1"
+  },
+  "scripts": {
+    "build": "echo 'No build step required'",
+    "start": "node server.js"
   }
 }
