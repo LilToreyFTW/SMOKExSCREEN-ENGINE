@@ -1,0 +1,46 @@
+/** TSAsync++.TSYNC++ - lightweight sync bridge between website and GUI */
+(() => {
+  const SYNC_KEY = 'tsasync-key-2025-02-27-a7f3c9e1';
+  const API_BASE = typeof window !== 'undefined' ? '' : 'https://smok-ex-screen-engine.vercel.app';
+  let lastHash = '';
+
+  async function fetchLocalKeys() {
+    try {
+      const r = await fetch('/admin/keys?status=unused&limit=500', { credentials: 'include' });
+      if (!r.ok) return [];
+      const data = await r.json();
+      return (data.keys || []).map(k => k.key_value);
+    } catch {
+      return [];
+    }
+  }
+
+  async function pushToGui(keys) {
+    if (typeof window === 'undefined') return; // server-side skip
+    try {
+      await fetch('/api/tsync', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ keys, key: SYNC_KEY })
+      });
+    } catch {}
+  }
+
+  async function syncLoop() {
+    const keys = await fetchLocalKeys();
+    const hash = keys.join('|');
+    if (hash !== lastHash) {
+      lastHash = hash;
+      await pushToGui(keys);
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    setInterval(syncLoop, 10000);
+    syncLoop();
+  }
+
+  if (typeof module !== 'undefined') {
+    module.exports = { syncLoop, SYNC_KEY };
+  }
+})();

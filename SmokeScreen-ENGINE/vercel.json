@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "server.js",  "use": "@vercel/node"   }
+  ],
+  "routes": [
+    { "src": "/auth/(.*)",   "dest": "server.js" },
+    { "src": "/keys/(.*)",   "dest": "server.js" },
+    { "src": "/admin/(.*)",  "dest": "server.js" },
+    { "src": "/dashboard",   "dest": "server.js" },
+    { "src": "/profile",     "dest": "server.js" },
+    { "src": "/health",      "dest": "server.js" },
+    { "src": "/ping",        "dest": "server.js" },
+    { "src": "/(.*)",        "dest": "index.html" }
+  ]
+}

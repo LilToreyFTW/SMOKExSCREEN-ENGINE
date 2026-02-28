@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Product — SmokeScreen ENGINE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --fire: #FF3D00;
+    --ember: #FF6B35;
+    --white: #F0EDE8;
+    --grid: rgba(255,61,0,0.06);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #0D0D0D; color: var(--white);
+    font-family: 'Syne', sans-serif; overflow-x: hidden; cursor: crosshair;
+  }
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 60px 60px; pointer-events:none; z-index:0;
+  }
+  body::after {
+    content:''; position:fixed; inset:0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+    pointer-events:none; z-index:999;
+  }
+  nav {
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    border-bottom:1px solid rgba(255,61,0,0.3);
+    background:rgba(13,13,13,0.92); backdrop-filter:blur(12px);
+  }
+  .nav-inner {
+    max-width:1400px; margin:0 auto; padding:0 2rem;
+    height:64px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .logo { font-family:'Bebas Neue',sans-serif; font-size:1.6rem; letter-spacing:0.1em; }
+  .logo span { color:var(--fire); }
+  .nav-links a {
+    font-family:'DM Mono',monospace; font-size:0.75rem;
+    color:rgba(240,237,232,0.5); text-decoration:none;
+    margin-left:2rem; letter-spacing:0.1em; text-transform:uppercase; transition:color 0.2s;
+  }
+  .nav-links a:hover, .nav-links a.active { color:var(--fire); }
+
+  /* ===== HERO ===== */
+  .hero {
+    min-height: 100vh; position:relative; z-index:1;
+    display:flex; flex-direction:column; justify-content:center;
+    max-width:1400px; margin:0 auto; padding:0 2rem;
+    overflow:hidden;
+  }
+
+  .hero-bg-text {
+    position:absolute; right:-2rem; top:50%; transform:translateY(-50%);
+    font-family:'Bebas Neue',sans-serif; font-size:clamp(160px,25vw,320px);
+    color:rgba(255,61,0,0.04); line-height:1; pointer-events:none; user-select:none;
+    white-space:nowrap;
+  }
+
+  .hero-eyebrow {
+    font-family:'DM Mono',monospace; font-size:0.7rem; color:var(--fire);
+    letter-spacing:0.3em; text-transform:uppercase; margin-bottom:2rem;
+    display:flex; align-items:center; gap:1rem;
+  }
+  .hero-eyebrow::before { content:''; display:block; width:50px; height:1px; background:var(--fire); }
+
+  .hero-h1 {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(70px,12vw,150px); line-height:0.88; letter-spacing:0.01em;
+    max-width:900px;
+  }
+  .hero-h1 em { color:var(--fire); font-style:normal; }
+
+  .hero-bottom {
+    display:flex; align-items:flex-end; justify-content:space-between;
+    margin-top:5vh; flex-wrap:wrap; gap:2rem;
+  }
+  .hero-desc {
+    max-width:440px; font-size:1rem; color:rgba(240,237,232,0.55); line-height:1.8;
+  }
+  .hero-actions { display:flex; gap:1rem; flex-wrap:wrap; }
+  .btn-primary {
+    background:var(--fire); color:#0D0D0D;
+    font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.1em;
+    padding:0.9rem 2.5rem; border:none; cursor:pointer; transition:background 0.2s;
+    text-decoration:none; display:inline-block;
+  }
+  .btn-primary:hover { background:var(--ember); }
+  .btn-ghost {
+    background:transparent; color:var(--white);
+    font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.1em;
+    padding:0.9rem 2.5rem; border:1px solid rgba(240,237,232,0.2); cursor:pointer; transition:all 0.2s;
+    text-decoration:none; display:inline-block;
+  }
+  .btn-ghost:hover { border-color:var(--fire); color:var(--fire); }
+
+  /* ===== STATUS BAR ===== */
+  .status-bar {
+    background:rgba(255,61,0,0.06); border:1px solid rgba(255,61,0,0.15);
+    border-left:none; border-right:none;
+    padding:0.85rem 2rem; position:relative; z-index:1; overflow:hidden;
+  }
+  .status-inner {
+    max-width:1400px; margin:0 auto;
+    display:flex; gap:4rem; align-items:center; flex-wrap:wrap;
+  }
+  .status-item {
+    display:flex; align-items:center; gap:0.75rem;
+    font-family:'DM Mono',monospace; font-size:0.7rem; color:rgba(240,237,232,0.4); letter-spacing:0.08em;
+  }
+  .status-dot {
+    width:6px; height:6px; border-radius:50%;
+    animation:pulse 2s infinite;
+  }
+  .dot-green { background:#00FF88; box-shadow:0 0 8px #00FF88; }
+  .dot-yellow { background:#FFD700; box-shadow:0 0 8px #FFD700; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+  /* ===== SECTIONS ===== */
+  .section {
+    max-width:1400px; margin:0 auto; padding:6rem 2rem; position:relative; z-index:1;
+  }
+  .section-label {
+    font-family:'DM Mono',monospace; font-size:0.7rem; color:var(--fire);
+    letter-spacing:0.25em; text-transform:uppercase;
+    display:flex; align-items:center; gap:1rem; margin-bottom:4rem;
+  }
+  .section-label::after { content:''; flex:1; height:1px; background:rgba(255,61,0,0.3); }
+
+  /* ARCHITECTURE DIAGRAM */
+  .arch-grid {
+    display:grid; grid-template-columns:1fr 2px 1fr; gap:0; align-items:stretch;
+  }
+  .arch-left { padding-right:4rem; }
+  .arch-divider { background:rgba(255,61,0,0.2); }
+  .arch-right { padding-left:4rem; }
+
+  .arch-title {
+    font-family:'Bebas Neue',sans-serif; font-size:clamp(40px,5vw,65px);
+    line-height:0.9; letter-spacing:0.02em; margin-bottom:2rem;
+  }
+  .arch-title em { color:var(--fire); font-style:normal; }
+  .arch-desc { font-size:0.9rem; color:rgba(240,237,232,0.5); line-height:1.8; margin-bottom:2rem; }
+
+  .arch-stat-row { display:flex; gap:3rem; margin-top:2.5rem; }
+  .arch-stat .num {
+    font-family:'Bebas Neue',sans-serif; font-size:2.8rem; color:var(--fire); line-height:1;
+  }
+  .arch-stat .label {
+    font-family:'DM Mono',monospace; font-size:0.62rem; color:rgba(240,237,232,0.35);
+    letter-spacing:0.1em; text-transform:uppercase;
+  }
+
+  /* LAYER DIAGRAM */
+  .layers { display:flex; flex-direction:column; gap:3px; }
+  .layer {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1.2rem 1.5rem; border:1px solid rgba(255,61,0,0.12);
+    background:#0D0D0D; transition:all 0.3s; cursor:default; position:relative;
+    overflow:hidden;
+  }
+  .layer::before {
+    content:''; position:absolute; left:0; top:0; bottom:0;
+    width:3px; background:var(--fire); transform:scaleY(0); transition:transform 0.3s; transform-origin:bottom;
+  }
+  .layer:hover { background:#111; border-color:rgba(255,61,0,0.3); }
+  .layer:hover::before { transform:scaleY(1); }
+  .layer-name {
+    font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.05em;
+  }
+  .layer-desc { font-size:0.75rem; color:rgba(240,237,232,0.35); margin-top:0.2rem; }
+  .layer-badge {
+    font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase;
+    color:rgba(240,237,232,0.25); border:1px solid rgba(255,61,0,0.15);
+    padding:0.25rem 0.6rem;
+  }
+
+  /* HOW IT WORKS */
+  .steps { display:flex; flex-direction:column; gap:0; }
+  .step {
+    display:grid; grid-template-columns:80px 1fr;
+    border-bottom:1px solid rgba(255,61,0,0.1); padding:2.5rem 0;
+    position:relative; transition:background 0.2s;
+  }
+  .step-num {
+    font-family:'Bebas Neue',sans-serif; font-size:4rem; color:rgba(255,61,0,0.15);
+    line-height:1; transition:color 0.3s;
+  }
+  .step:hover .step-num { color:var(--fire); }
+  .step-content {}
+  .step-title {
+    font-family:'Bebas Neue',sans-serif; font-size:1.6rem; letter-spacing:0.04em;
+    margin-bottom:0.75rem;
+  }
+  .step-desc { font-size:0.875rem; color:rgba(240,237,232,0.5); line-height:1.7; max-width:600px; }
+
+  /* TESTIMONIALS */
+  .testimonial-grid {
+    display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+    background:rgba(255,61,0,0.1); border:1px solid rgba(255,61,0,0.1);
+  }
+  .testimonial {
+    background:#0D0D0D; padding:2.5rem; transition:background 0.3s;
+  }
+  .testimonial:hover { background:#111; }
+  .t-quote {
+    font-size:0.875rem; color:rgba(240,237,232,0.6); line-height:1.8;
+    margin-bottom:2rem; position:relative;
+  }
+  .t-quote::before {
+    content:'"'; font-family:'Bebas Neue',sans-serif; font-size:4rem; color:rgba(255,61,0,0.2);
+    position:absolute; top:-1rem; left:-0.5rem; line-height:1;
+  }
+  .t-author { display:flex; align-items:center; gap:1rem; }
+  .t-avatar {
+    width:40px; height:40px; background:rgba(255,61,0,0.15);
+    border:1px solid rgba(255,61,0,0.3);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Bebas Neue',sans-serif; font-size:1.1rem; color:var(--fire);
+  }
+  .t-name { font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:0.05em; }
+  .t-role { font-family:'DM Mono',monospace; font-size:0.62rem; color:rgba(240,237,232,0.3); letter-spacing:0.08em; }
+
+  /* CTA SECTION */
+  .cta-section {
+    position:relative; z-index:1; overflow:hidden;
+    border-top:1px solid rgba(255,61,0,0.2); border-bottom:1px solid rgba(255,61,0,0.2);
+  }
+  .cta-inner {
+    max-width:1400px; margin:0 auto; padding:8rem 2rem;
+    text-align:center; position:relative;
+  }
+  .cta-bg {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:600px; height:600px; pointer-events:none;
+    background:radial-gradient(circle, rgba(255,61,0,0.12) 0%, transparent 70%);
+  }
+  .cta-title {
+    font-family:'Bebas Neue',sans-serif; font-size:clamp(50px,8vw,100px);
+    line-height:0.9; letter-spacing:0.02em; position:relative;
+  }
+  .cta-title em { color:var(--fire); font-style:normal; }
+  .cta-sub {
+    font-family:'DM Mono',monospace; font-size:0.8rem; color:rgba(240,237,232,0.4);
+    letter-spacing:0.1em; margin:2rem 0 3rem; position:relative;
+  }
+  .cta-actions { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; position:relative; }
+
+  footer {
+    border-top:1px solid rgba(255,61,0,0.2); padding:2rem; text-align:center;
+    font-family:'DM Mono',monospace; font-size:0.7rem; color:rgba(240,237,232,0.25); letter-spacing:0.1em;
+    position:relative; z-index:1;
+  }
+
+  @media(max-width:900px) {
+    .arch-grid { grid-template-columns:1fr; }
+    .arch-divider { display:none; }
+    .arch-left { padding-right:0; margin-bottom:3rem; }
+    .arch-right { padding-left:0; }
+    .testimonial-grid { grid-template-columns:1fr; }
+    .nav-links { display:none; }
+    .step { grid-template-columns:50px 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo">SMOKE<span>SCREEN</span> ENGINE</div>
+    <div class="nav-links">
+      <a href="./" class="active">PRODUCT</a>
+      <a href="../features/">FEATURES</a>
+      <a href="../marketplace/">MARKETPLACE</a>
+      <a href="../pricing/">PRICING</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg-text">ENGINE</div>
+  <div class="hero-eyebrow">SmokeScreen ENGINE — v4.2</div>
+  <h1 class="hero-h1">
+    THE PLATFORM<br>THAT <em>DOESN'T</em><br>FLINCH
+  </h1>
+  <div class="hero-bottom">
+    <p class="hero-desc">
+      SmokeScreen ENGINE is a next-generation SaaS infrastructure platform — built for teams who need real-time performance, airtight security, and zero excuses.
+    </p>
+    <div class="hero-actions">
+      <a href="../pricing/" class="btn-primary">START FOR FREE →</a>
+      <a href="../features/" class="btn-ghost">SEE FEATURES</a>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="status-inner">
+    <div class="status-item"><div class="status-dot dot-green"></div>ALL SYSTEMS OPERATIONAL</div>
+    <div class="status-item"><div class="status-dot dot-green"></div>API: 14ms LATENCY</div>
+    <div class="status-item"><div class="status-dot dot-green"></div>99.98% UPTIME 30D</div>
+    <div class="status-item"><div class="status-dot dot-yellow"></div>CDN EAST: MAINTENANCE 03:00 UTC</div>
+  </div>
+</div>
+
+<!-- ARCHITECTURE -->
+<div class="section">
+  <div class="section-label">Platform Architecture</div>
+  <div class="arch-grid">
+    <div class="arch-left">
+      <h2 class="arch-title">ENGINEERED<br>FROM THE<br><em>GROUND UP</em></h2>
+      <p class="arch-desc">
+        Every layer of SmokeScreen ENGINE was designed with one obsession: performance under pressure. From the distributed event bus to the AI inference runtime, every component is built to scale horizontally and fail gracefully.
+      </p>
+      <p class="arch-desc">
+        No bolt-on integrations. No third-party black boxes. One cohesive system you can reason about, monitor, and trust.
+      </p>
+      <div class="arch-stat-row">
+        <div class="arch-stat"><div class="num">40+</div><div class="label">Edge Nodes</div></div>
+        <div class="arch-stat"><div class="num">&lt;5ms</div><div class="label">P99 Latency</div></div>
+        <div class="arch-stat"><div class="num">99.99%</div><div class="label">Uptime SLA</div></div>
+      </div>
+    </div>
+    <div class="arch-divider"></div>
+    <div class="arch-right">
+      <div class="layers">
+        <div class="layer">
+          <div><div class="layer-name">EDGE MESH</div><div class="layer-desc">Global CDN + real-time routing</div></div>
+          <div class="layer-badge">Layer 1</div>
+        </div>
+        <div class="layer">
+          <div><div class="layer-name">API GATEWAY</div><div class="layer-desc">Unified REST / GraphQL / gRPC</div></div>
+          <div class="layer-badge">Layer 2</div>
+        </div>
+        <div class="layer">
+          <div><div class="layer-name">EVENT BUS</div><div class="layer-desc">High-throughput distributed queue</div></div>
+          <div class="layer-badge">Layer 3</div>
+        </div>
+        <div class="layer">
+          <div><div class="layer-name">RUNTIME ENGINE</div><div class="layer-desc">Workflow + automation core</div></div>
+          <div class="layer-badge">Layer 4</div>
+        </div>
+        <div class="layer">
+          <div><div class="layer-name">AI INFERENCE</div><div class="layer-desc">Edge ML model execution</div></div>
+          <div class="layer-badge">Layer 5</div>
+        </div>
+        <div class="layer">
+          <div><div class="layer-name">DATA STORE</div><div class="layer-desc">Distributed OLTP + OLAP</div></div>
+          <div class="layer-badge">Layer 6</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="section" style="padding-top:0;">
+  <div class="section-label">How It Works</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-content">
+        <div class="step-title">CONNECT YOUR STACK</div>
+        <p class="step-desc">Plug in your existing services via our API gateway or native SDK. Works with every major cloud provider, database, and messaging system out of the box. Setup takes minutes, not weeks.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-content">
+        <div class="step-title">DEFINE YOUR WORKFLOWS</div>
+        <p class="step-desc">Use the visual workflow builder or raw YAML config to define how data flows through your system. Automate decisions, transformations, and triggers at any scale.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-content">
+        <div class="step-title">DEPLOY TO THE EDGE</div>
+        <p class="step-desc">Push your configurations live across 40+ global nodes in under 30 seconds. Zero-downtime deployments, automatic rollback, and canary support built in.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-content">
+        <div class="step-title">MONITOR EVERYTHING</div>
+        <p class="step-desc">Full-stack observability from day one. Distributed tracing, custom dashboards, real-time anomaly detection, and AI-powered root cause analysis keep you in control.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TESTIMONIALS -->
+<div class="section" style="padding-top:0;">
+  <div class="section-label">From the Field</div>
+  <div class="testimonial-grid">
+    <div class="testimonial">
+      <div class="t-quote">We cut infrastructure costs by 40% in the first month and our deploy time went from 20 minutes to under a minute. SmokeScreen didn't just improve our stack — it replaced it.</div>
+      <div class="t-author">
+        <div class="t-avatar">KR</div>
+        <div>
+          <div class="t-name">KYLE RODRIGUEZ</div>
+          <div class="t-role">CTO @ AXIOM SYSTEMS</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial">
+      <div class="t-quote">The AI inference layer is unlike anything else on the market. We're running real-time fraud detection on 3M events/day with sub-10ms latency. This thing is built different.</div>
+      <div class="t-author">
+        <div class="t-avatar">AM</div>
+        <div>
+          <div class="t-name">ASHA MEHTA</div>
+          <div class="t-role">HEAD OF ENGINEERING @ VANTAGE</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial">
+      <div class="t-quote">Finally a platform where the observability isn't an afterthought. Full tracing, smart alerting, and a dashboard that actually tells me what's wrong before my users notice.</div>
+      <div class="t-author">
+        <div class="t-avatar">TJ</div>
+        <div>
+          <div class="t-name">TYLER JAMES</div>
+          <div class="t-role">PLATFORM LEAD @ STRATUM IO</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-inner">
+    <div class="cta-bg"></div>
+    <h2 class="cta-title">STOP<br>SETTLING.<br><em>START SHIPPING.</em></h2>
+    <div class="cta-sub">NO CREDIT CARD. NO COMMITMENT. JUST THE ENGINE.</div>
+    <div class="cta-actions">
+      <a href="../pricing/" class="btn-primary">GET STARTED FREE →</a>
+      <a href="../features/" class="btn-ghost">EXPLORE FEATURES</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  © 2025 SMOKESCREEN ENGINE — BUILT FOR PEOPLE WHO SHIP — v4.2.1
+</footer>
+
+</body>
+</html>
