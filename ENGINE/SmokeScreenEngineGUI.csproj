@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationVisualStyles>true</ApplicationVisualStyles>
+    <AssemblyName>SmokeScreenEngine</AssemblyName>
+    <RootNamespace>SmokeScreenEngine</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Exclude files that belong to ENGINE.csproj (the console/admin app) -->
+  <ItemGroup>
+    <Compile Remove="AdminConsole.cs" />
+    <Compile Remove="ApiServer.cs" />
+    <Compile Remove="Database.cs" />
+    <Compile Remove="KeyService.cs" />
+    <Compile Remove="Models.cs" />
+    <Compile Remove="EngineProgram.cs" />
+    <Compile Remove="Program.cs" />
+    <Compile Remove="EngineClient.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.0" />
+  </ItemGroup>
+</Project>
