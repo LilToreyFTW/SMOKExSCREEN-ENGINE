@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Redeem Key — SmokeScreen ENGINE</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#03040a;color:#f0ede8;height:100vh;display:flex;align-items:center;justify-content:center;}
+    .card{background:#0b0e18;border:1px solid rgba(255,61,0,0.15);border-radius:12px;padding:48px;width:100%;max-width:420px;}
+    .logo{font-size:24px;font-weight:800;letter-spacing:-1px;margin-bottom:32px;text-align:center;}
+    .form{display:flex;flex-direction:column;gap:20px;}
+    .form label{font-size:14px;font-weight:600;color:rgba(240,237,232,0.8);display:block;margin-bottom:8px;}
+    .form input{width:100%;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:16px;outline:none;transition:border-color 0.2s;}
+    .form input:focus{border-color:#ff3d00;}
+    .form button{width:100%;padding:14px 24px;background:#ff3d00;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;transition:background 0.2s;}
+    .form button:hover{background:#e63600;}
+    .form button:disabled{background:#555;cursor:not-allowed;}
+    .message{margin-top:16px;padding:12px;border-radius:6px;font-size:14px;}
+    .message.error{background:rgba(255,61,0,0.1);color:#ff3d00;}
+    .message.success{background:rgba(0,255,136,0.1);color:#00ff88;}
+    .back{text-align:center;margin-top:24px;}
+    .back a{color:#ff3d00;text-decoration:none;font-weight:600;}
+    .back a:hover{text-decoration:underline;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">SMOKESCREEN ENGINE</div>
+    <h2 style="text-align:center;margin-bottom:24px;">Redeem License Key</h2>
+    <form class="form" id="redeemForm">
+      <label for="key">License Key</label>
+      <input type="text" id="key" name="key" placeholder="XXXX-XXXX-XXXX-XXXX" required autocomplete="off"/>
+      <button type="submit" id="submitBtn">REDEEM →</button>
+    </form>
+    <div id="message"></div>
+
+    <div class="back">
+      <a href="/sign-in">← Back to sign in</a>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('redeemForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const messageEl = document.getElementById('message');
+
+    function showMessage(text, type) {
+      messageEl.textContent = text;
+      messageEl.className = `message ${type}`;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const key = document.getElementById('key').value.trim();
+      if (!key) {
+        showMessage('Please enter a license key.', 'error');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'REDEEMING...';
+
+      try {
+        const res = await fetch('/api/keys/redeem', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.ok) {
+          showMessage('License key redeemed successfully! Redirecting...', 'success');
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 2000);
+        } else {
+          showMessage(data.message || 'Redeem failed. Please check your key.', 'error');
+        }
+      } catch (err) {
+        showMessage('Network error. Please try again.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'REDEEM →';
+      }
+    });
+  </script>
+</body>
+</html>
