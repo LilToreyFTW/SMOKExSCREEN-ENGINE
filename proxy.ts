@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(req: NextRequest) {
+export async function proxy(req: NextRequest) {
     // This provides the data the ENGINE EXE displays in the dashboard
     return NextResponse.json({
         cloudStatus: "Active",
