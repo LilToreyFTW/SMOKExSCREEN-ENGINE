@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+
+# Build / IDE
+*.exe
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# Env (keep .env.example)
+.env
+.env.local
+.env.*.local
+
+# Logs / OS
+*.log
+.DS_Store
+Thumbs.db
