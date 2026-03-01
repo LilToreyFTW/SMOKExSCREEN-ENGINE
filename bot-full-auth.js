@@ -22,6 +22,7 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.DirectMessages,
   ],
 });
 
@@ -408,6 +409,17 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
+// Keep-alive: Vercel cron pings these so the bot stays online across deploys
+app.get('/health', (req, res) => {
+  res.json({ ok: true, status: 'online', ts: Date.now() });
+});
+app.get('/', (req, res) => {
+  res.json({ ok: true, service: 'SmokeScreen Discord Bot', status: 'online' });
+});
+app.get('/wake', (req, res) => {
+  res.json({ ok: true, woken: Date.now() });
+});
+
 app.post('/api/bot/keys', (req, res) => {
   const { keys, durationType } = req.body;
   if (!Array.isArray(keys) || !durationType) return res.status(400).json({ error: 'Invalid payload' });
@@ -415,6 +427,49 @@ app.post('/api/bot/keys', (req, res) => {
   keyStock.set(durationType, current + keys.length);
   updateKeyStockDisplay();
   res.json({ ok: true, received: keys.length });
+});
+
+// Donny.AI sync — receive events from server/ENGINE and post to Discord
+const DONNY_CHANNELS = {
+  LOGIN_NOTIFY: ANNOUNCEMENTS_CHANNEL_ID,
+  REGISTER_NOTIFY: ANNOUNCEMENTS_CHANNEL_ID,
+  NEW_USER_LIVE_PAGE_VISIT: CHAT_CHANNEL_ID,
+  KEY_REDEEM_NOTIFY: ANNOUNCEMENTS_CHANNEL_ID,
+  AUTOMATES_NOTIFYS: ANNOUNCEMENTS_CHANNEL_ID,
+  SYSTEM_HEALTH: CHAT_CHANNEL_ID,
+  ENGINE_PING: CHAT_CHANNEL_ID,
+};
+app.post('/api/bot/donny', async (req, res) => {
+  const { event, payload } = req.body || {};
+  if (!event) return res.status(400).json({ error: 'Missing event' });
+  const channelId = DONNY_CHANNELS[event] || ANNOUNCEMENTS_CHANNEL_ID;
+  try {
+    const channel = await client.channels.fetch(channelId);
+    if (!channel) {
+      res.status(502).json({ error: 'Channel not found' });
+      return;
+    }
+    const title = {
+      LOGIN_NOTIFY: '🔐 Login',
+      REGISTER_NOTIFY: '📝 New Registration',
+      NEW_USER_LIVE_PAGE_VISIT: '👁️ Live Page Visit',
+      KEY_REDEEM_NOTIFY: '🔑 Key Redeemed',
+      AUTOMATES_NOTIFYS: '🤖 Automate Notify',
+      SYSTEM_HEALTH: '📊 System Health',
+      ENGINE_PING: '⚙️ ENGINE Ping',
+    }[event] || `Donny: ${event}`;
+    const desc = payload?.message || (payload ? JSON.stringify(payload, null, 2) : '');
+    const fields = [];
+    if (payload?.username) fields.push({ name: 'Username', value: String(payload.username), inline: true });
+    if (payload?.email) fields.push({ name: 'Email', value: String(payload.email).replace(/(.{2}).*@/, '$1***@'), inline: true });
+    if (payload?.path) fields.push({ name: 'Path', value: String(payload.path), inline: true });
+    if (payload?.userId) fields.push({ name: 'User ID', value: String(payload.userId).slice(0, 8) + '…', inline: true });
+    await channel.send({ embeds: [createAnnouncementEmbed(title, desc, fields)] });
+    res.json({ ok: true, channelId });
+  } catch (err) {
+    console.error('Donny post failed:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.listen(9877, () => console.log('Bot API listening on port 9877'));

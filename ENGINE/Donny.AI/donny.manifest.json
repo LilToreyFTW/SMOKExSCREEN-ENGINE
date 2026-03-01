@@ -1,0 +1,21 @@
+{
+  "name": "Donny.AI",
+  "version": "1.0.0",
+  "role": "AI Manager — Manages All Systems",
+  "description": "SmokeScreen ENGINE central AI manager. Coordinates notifications, login/register notifies, live page visits, and Discord sync across ENGINE.exe and web.",
+  "systems": [
+    "ENGINE.exe",
+    "SmokeScreenEngine.exe",
+    "SmokeScreen-ENGINE (web)",
+    "Discord bot"
+  ],
+  "syncFile": "DonnySync.LLM.AI",
+  "capabilities": [
+    "AUTOMATES_NOTIFYS",
+    "LOGIN_NOTIFY",
+    "REGISTER_NOTIFY",
+    "NEW_USER_LIVE_PAGE_VISIT",
+    "KEY_REDEEM_NOTIFY",
+    "SYSTEM_HEALTH"
+  ]
+}

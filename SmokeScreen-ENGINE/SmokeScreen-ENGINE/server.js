@@ -22,6 +22,7 @@ const COOKIE_SECURE = String(process.env.COOKIE_SECURE || '').toLowerCase() === 
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
+const DONNY_BOT_API_URL = process.env.DONNY_BOT_API_URL || 'http://localhost:9877';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -52,6 +53,8 @@ const csrfProtection = csrf({
     sameSite: 'lax',
     secure: COOKIE_SECURE,
   },
+  // Accept token from header (frontend sends csrf-token) or body (some proxies strip headers)
+  value: (req) => req.body?._csrf || req.headers['csrf-token'] || req.headers['x-csrf-token'] || req.headers['xsrf-token'],
 });
 
 const loginLimiter = rateLimit({
@@ -86,6 +89,20 @@ async function logActivity({ userId, action, detail, req }) {
       [uuidv4(), userId || null, action, detail || null, req.ip || null, req.get('user-agent') || null, nowMs()]
     );
   } catch (_) {
+  }
+}
+
+// Donny.AI sync — send event to Discord bot (DonnySync.LLM.AI)
+async function donnyNotify(event, payload, req) {
+  try {
+    const res = await fetch(`${DONNY_BOT_API_URL}/api/bot/donny`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, payload: { ...payload, ip: req?.ip, userAgent: req?.get?.('user-agent') } }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+  } catch (e) {
+    // Don't fail request if Donny bot is unreachable
   }
 }
 
@@ -425,13 +442,16 @@ app.post('/auth/discord/engine-callback', express.json(), async (req, res) => {
 app.post(
   '/auth/register',
   csrfProtection,
-  body('email').custom((v) => isValidEmail(v)),
-  body('username').isLength({ min: 3, max: 32 }),
-  body('password').isString(),
-  body('confirmPassword').isString(),
+  body('email').custom((v) => isValidEmail(v)).withMessage('Enter a valid email'),
+  body('username').isLength({ min: 3, max: 32 }).withMessage('Username must be 3–32 characters'),
+  body('password').isString().notEmpty().withMessage('Password is required'),
+  body('confirmPassword').isString().notEmpty().withMessage('Confirm password is required'),
   async (req, res) => {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ message: 'Invalid input' });
+    if (!errors.isEmpty()) {
+      const first = errors.array()[0];
+      return res.status(400).json({ message: first?.msg || first?.message || 'Invalid input', errors: errors.array() });
+    }
 
     const { email, username, password, confirmPassword } = req.body;
     if (password !== confirmPassword) return res.status(400).json({ message: 'Passwords do not match' });
@@ -450,9 +470,11 @@ app.post(
         [userId, username, email, hash, 'user', nowMs()]
       );
       await logActivity({ userId, action: 'REGISTER', detail: null, req });
+      await donnyNotify('REGISTER_NOTIFY', { username, email }, req);
 
       return res.json({ ok: true });
     } catch (e) {
+      console.error('Register error:', e.message || e);
       return res.status(500).json({ message: 'Server error' });
     }
   }
@@ -462,11 +484,14 @@ app.post(
   '/auth/login',
   loginLimiter,
   csrfProtection,
-  body('email').custom((v) => isValidEmail(v)),
-  body('password').isString(),
+  body('email').custom((v) => isValidEmail(v)).withMessage('Enter a valid email'),
+  body('password').isString().notEmpty().withMessage('Password is required'),
   async (req, res) => {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ message: 'Invalid input' });
+    if (!errors.isEmpty()) {
+      const first = errors.array()[0];
+      return res.status(400).json({ message: first?.msg || first?.message || 'Invalid input', errors: errors.array() });
+    }
 
     const { email, password } = req.body;
     try {
@@ -494,12 +519,24 @@ app.post(
       );
       setSessionCookie(res, token);
       await logActivity({ userId: user.id, action: 'LOGIN_OK', detail: null, req });
+      await donnyNotify('LOGIN_NOTIFY', { username: user.username, email: user.email, userId: user.id }, req);
       return res.json({ ok: true, redirect: '/dashboard' });
     } catch (e) {
+      console.error('Login error:', e.message || e);
       return res.status(500).json({ message: 'Server error' });
     }
   }
 );
+
+// Auth debug (no secrets): helps confirm DB and CSRF are working
+app.get('/auth/debug', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    return res.json({ db: 'ok', csrf: 'GET /auth/csrf to get token, then POST with header csrf-token or body _csrf' });
+  } catch (e) {
+    return res.status(500).json({ db: 'error', message: e.message });
+  }
+});
 
 app.get('/auth/me', requireAuth, async (req, res) => {
   return res.json({ user: req.user });
@@ -738,12 +775,31 @@ app.post('/keys/redeem', requireAuth, async (req, res) => {
 
     await client.query('COMMIT');
     await logActivity({ userId: req.user.id, action: 'KEY_REDEEM', detail: row.duration_type, req });
+    await donnyNotify('KEY_REDEEM_NOTIFY', { userId: req.user.id, username: req.user.username, durationType: row.duration_type }, req);
     return res.json({ ok: true });
   } catch (e) {
     try { await client.query('ROLLBACK'); } catch (_) {}
     return res.status(500).json({ message: 'Server error' });
   } finally {
     client.release();
+  }
+});
+
+// Donny.AI — new user live page visit (call from frontend or middleware)
+app.post('/api/donny/visit', express.json(), async (req, res) => {
+  const pathName = String(req.body?.path || req.query?.path || '/').trim();
+  try {
+    const user = await getSessionFromRequest(req);
+    if (user) {
+      await donnyNotify('NEW_USER_LIVE_PAGE_VISIT', {
+        path: pathName,
+        userId: user.user?.id,
+        username: user.user?.username,
+      }, req);
+    }
+    return res.json({ ok: true });
+  } catch (_) {
+    return res.json({ ok: true });
   }
 });
 
@@ -844,6 +900,14 @@ app.put('/admin/settings', requireAuth, requireAdmin, csrfProtection, async (req
   } catch (e) {
     return res.status(500).json({ message: 'Server error' });
   }
+});
+
+// Auth debug: return JSON for CSRF and other auth errors (so frontend shows a clear message)
+app.use((err, req, res, next) => {
+  if (err.code === 'EBADCSRFTOKEN') {
+    return res.status(403).json({ message: 'Invalid or expired security token. Refresh the page and try again.' });
+  }
+  next(err);
 });
 
 app.use(express.static(__dirname));

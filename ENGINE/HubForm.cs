@@ -27,6 +27,8 @@ namespace SmokeScreenEngine
         private Button _refreshKeysBtn = null!;
         private Button _generateKeysBtn = null!;
         private Label _keysCountLabel = null!;
+        private NumericUpDown _keyGenCount = null!;
+        private ComboBox _keyGenDuration = null!;
         private readonly System.Windows.Forms.Timer _pingTimer = new();
         private MsPingStatus _msPingStatus = null!;
 
@@ -53,7 +55,9 @@ namespace SmokeScreenEngine
 
             _tabs.Dock = DockStyle.Fill;
             _tabs.Padding = new Point(16, 8);
+            _tabs.SelectedIndexChanged += (s, _) => { if (_tabs.SelectedTab?.Text == "DASHBOARD") RefreshDashboardCards(); };
 
+            _tabs.TabPages.Add(BuildDashboardTab());
             _tabs.TabPages.Add(BuildAccountTab());
             _tabs.TabPages.Add(BuildLicenseTab());
             _tabs.TabPages.Add(BuildEngineTab());
@@ -69,6 +73,113 @@ namespace SmokeScreenEngine
             Controls.Add(_msPingStatus);
 
             Controls.Add(_tabs);
+        }
+
+        private TabPage BuildDashboardTab()
+        {
+            var tp = new TabPage("DASHBOARD") { BackColor = Theme.Background };
+
+            var title = new Label
+            {
+                Text = "DASHBOARD — Overview",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = Color.White,
+                Bounds = new Rectangle(24, 20, 500, 36)
+            };
+            tp.Controls.Add(title);
+
+            int y = 70;
+            int cardW = 260; int cardH = 100; int gap = 20;
+
+            var cardAccount = new Panel
+            {
+                Bounds = new Rectangle(24, y, cardW, cardH),
+                BackColor = Theme.CardBackground,
+                BorderStyle = BorderStyle.None
+            };
+            var lblAccountTitle = new Label { Text = "ACCOUNT", Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = Theme.TextSecondary, Location = new Point(14, 12) };
+            var lblAccountVal = new Label { Text = "—", Font = new Font("Segoe UI", 11), ForeColor = Color.White, Location = new Point(14, 38), AutoSize = true };
+            cardAccount.Controls.Add(lblAccountTitle);
+            cardAccount.Controls.Add(lblAccountVal);
+            cardAccount.Tag = lblAccountVal;
+            tp.Controls.Add(cardAccount);
+
+            var cardLicense = new Panel
+            {
+                Bounds = new Rectangle(24 + cardW + gap, y, cardW, cardH),
+                BackColor = Theme.CardBackground,
+                BorderStyle = BorderStyle.None
+            };
+            var lblLicenseTitle = new Label { Text = "LICENSE", Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = Theme.TextSecondary, Location = new Point(14, 12) };
+            var lblLicenseVal = new Label { Text = "—", Font = new Font("Segoe UI", 11), ForeColor = Color.White, Location = new Point(14, 38), AutoSize = true };
+            cardLicense.Controls.Add(lblLicenseTitle);
+            cardLicense.Controls.Add(lblLicenseVal);
+            cardLicense.Tag = lblLicenseVal;
+            tp.Controls.Add(cardLicense);
+
+            var cardKeys = new Panel
+            {
+                Bounds = new Rectangle(24 + (cardW + gap) * 2, y, cardW, cardH),
+                BackColor = Theme.CardBackground,
+                BorderStyle = BorderStyle.None
+            };
+            var lblKeysTitle = new Label { Text = "CACHED KEYS", Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = Theme.TextSecondary, Location = new Point(14, 12) };
+            var lblKeysVal = new Label { Text = "—", Font = new Font("Segoe UI", 11), ForeColor = Color.White, Location = new Point(14, 38), AutoSize = true };
+            cardKeys.Controls.Add(lblKeysTitle);
+            cardKeys.Controls.Add(lblKeysVal);
+            cardKeys.Tag = lblKeysVal;
+            tp.Controls.Add(cardKeys);
+
+            y += cardH + gap;
+            var cardEngine = new Panel
+            {
+                Bounds = new Rectangle(24, y, cardW, cardH),
+                BackColor = Theme.CardBackground,
+                BorderStyle = BorderStyle.None
+            };
+            var lblEngineTitle = new Label { Text = "ENGINE STATUS", Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = Theme.TextSecondary, Location = new Point(14, 12) };
+            var lblEngineVal = new Label { Text = "Checking…", Font = new Font("Segoe UI", 11), ForeColor = Theme.TextSecondary, Location = new Point(14, 38), AutoSize = true };
+            cardEngine.Controls.Add(lblEngineTitle);
+            cardEngine.Controls.Add(lblEngineVal);
+            cardEngine.Tag = lblEngineVal;
+            tp.Controls.Add(cardEngine);
+
+            _dashboardCards = new List<Label> { lblAccountVal, lblLicenseVal, lblKeysVal, lblEngineVal };
+
+            return tp;
+        }
+
+        private List<Label>? _dashboardCards;
+
+        private void RefreshDashboardCards()
+        {
+            if (_dashboardCards == null || _dashboardCards.Count < 4) return;
+            bool signedIn = _token != null && _user != null;
+            _dashboardCards[0].Text = signedIn ? _user!.DisplayName : "Not signed in";
+            _dashboardCards[0].ForeColor = signedIn ? Theme.Success : Theme.TextSecondary;
+            _dashboardCards[1].Text = signedIn && _license != null ? _license!.StatusLine() : "—";
+            _dashboardCards[1].ForeColor = signedIn && _license != null && _license!.HasAccess ? Theme.Success : Theme.TextSecondary;
+            var all = KeyCache.GetAll();
+            int unused = all.Count(k => !k.Used);
+            _dashboardCards[2].Text = $"{unused} unused";
+            _dashboardCards[2].ForeColor = unused > 0 ? Theme.Success : Theme.TextSecondary;
+            _ = UpdateDashboardEngineStatusAsync(_dashboardCards[3]);
+        }
+
+        private async Task UpdateDashboardEngineStatusAsync(Label lbl)
+        {
+            try
+            {
+                using var c = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+                var r = await c.GetAsync("https://smok-ex-screen-engine.vercel.app/ping");
+                lbl.Text = r.IsSuccessStatusCode ? "Online" : "Offline";
+                lbl.ForeColor = r.IsSuccessStatusCode ? Theme.Success : Theme.Error;
+            }
+            catch
+            {
+                lbl.Text = "Offline";
+                lbl.ForeColor = Theme.Error;
+            }
         }
 
         private TabPage BuildAccountTab()
@@ -195,10 +306,34 @@ namespace SmokeScreenEngine
             _refreshKeysBtn.FlatAppearance.BorderSize = 0;
             _refreshKeysBtn.Click += async (_, __) => await RefreshKeysAsync();
 
+            var keyGenLabel = new Label
+            {
+                Text = "Key generation",
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                ForeColor = Theme.TextSecondary,
+                Bounds = new Rectangle(24, 228, 120, 20)
+            };
+            _keyGenCount = new NumericUpDown
+            {
+                Bounds = new Rectangle(24, 250, 72, 28),
+                Minimum = 1,
+                Maximum = 100,
+                Value = 10,
+                Font = new Font("Segoe UI", 10)
+            };
+            _keyGenDuration = new ComboBox
+            {
+                Bounds = new Rectangle(106, 250, 140, 28),
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Font = new Font("Segoe UI", 10)
+            };
+            _keyGenDuration.Items.AddRange(new object[] { "1_DAY", "1_MONTH", "3_MONTH", "6_MONTHS", "1_YEAR", "LIFETIME" });
+            _keyGenDuration.SelectedIndex = 1;
+
             _generateKeysBtn = new Button
             {
-                Text = "GENERATE KEYS",
-                Bounds = new Rectangle(24, 230, 160, 40),
+                Text = "GENERATE KEYS →",
+                Bounds = new Rectangle(256, 248, 180, 32),
                 FlatStyle = FlatStyle.Flat,
                 BackColor = Theme.AccentBlue,
                 ForeColor = Color.White,
@@ -211,7 +346,7 @@ namespace SmokeScreenEngine
             _keysCountLabel = new Label
             {
                 Text = "Cached unused keys: ?",
-                Bounds = new Rectangle(200, 240, 640, 20),
+                Bounds = new Rectangle(24, 290, 640, 20),
                 ForeColor = Theme.TextSecondary
             };
 
@@ -221,6 +356,9 @@ namespace SmokeScreenEngine
             tp.Controls.Add(_redeemBtn);
             tp.Controls.Add(_redeemResult);
             tp.Controls.Add(_refreshKeysBtn);
+            tp.Controls.Add(keyGenLabel);
+            tp.Controls.Add(_keyGenCount);
+            tp.Controls.Add(_keyGenDuration);
             tp.Controls.Add(_generateKeysBtn);
             tp.Controls.Add(_keysCountLabel);
 
@@ -432,6 +570,7 @@ namespace SmokeScreenEngine
 
             _redeemBtn.Enabled = signedIn;
             _openCloudBtn.Enabled = signedIn;
+            RefreshDashboardCards();
         }
 
         private void SetBusy(bool busy)
@@ -441,6 +580,8 @@ namespace SmokeScreenEngine
             _redeemBtn.Enabled = !busy && (_token != null);
             _refreshKeysBtn.Enabled = !busy && (_token != null);
             _generateKeysBtn.Enabled = !busy && (_token != null);
+            if (_keyGenCount != null) _keyGenCount.Enabled = !busy;
+            if (_keyGenDuration != null) _keyGenDuration.Enabled = !busy;
             _openMarketplaceBtn.Enabled = !busy;
             _openCloudBtn.Enabled = !busy && (_token != null);
             Cursor = busy ? Cursors.WaitCursor : Cursors.Default;
@@ -448,11 +589,13 @@ namespace SmokeScreenEngine
 
         private async Task GenerateKeysAsync()
         {
+            int count = (int)_keyGenCount.Value;
+            string duration = _keyGenDuration.SelectedItem?.ToString() ?? "1_MONTH";
             SetBusy(true);
             try
             {
-                await KeyGenerator.GenerateAndSendBatchAsync(10, "1_MONTH");
-                _redeemResult.Text = "Generated and saved 10 keys (1_MONTH) to server, Discord, and sourcelink.";
+                await KeyGenerator.GenerateAndSendBatchAsync(count, duration);
+                _redeemResult.Text = $"Generated and saved {count} keys ({duration}) to server, Discord, and sourcelink.";
                 _redeemResult.ForeColor = Theme.TextSecondary;
             }
             catch (Exception ex)
@@ -519,6 +662,7 @@ namespace SmokeScreenEngine
                     _redeemKeyBox.Text = next.Key;
                 }
             }
+            RefreshDashboardCards();
         }
 
         private void SetupPingTimer()

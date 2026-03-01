@@ -120,10 +120,13 @@ namespace SmokeScreenEngine
         {
             return durationType switch
             {
+                "1_DAY" => 24L * 60 * 60 * 1000,
                 "1_MONTH" => 30L * 24 * 60 * 60 * 1000,
+                "3_MONTH" => 90L * 24 * 60 * 60 * 1000,
                 "3_MONTHS" => 90L * 24 * 60 * 60 * 1000,
                 "6_MONTHS" => 180L * 24 * 60 * 60 * 1000,
                 "1_YEAR" => 365L * 24 * 60 * 60 * 1000,
+                "LIFETIME" => 0,
                 _ => 30L * 24 * 60 * 60 * 1000
             };
         }

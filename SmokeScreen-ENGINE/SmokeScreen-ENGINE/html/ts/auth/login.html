@@ -94,10 +94,11 @@
           method: 'POST',
           headers: {
             'content-type': 'application/json',
-            'csrf-token': csrfToken
+            'csrf-token': csrfToken,
+            'x-csrf-token': csrfToken
           },
           credentials: 'include',
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ email, password, _csrf: csrfToken })
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {

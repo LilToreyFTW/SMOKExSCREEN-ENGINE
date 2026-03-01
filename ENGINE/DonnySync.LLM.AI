@@ -1,0 +1,50 @@
+# DonnySync.LLM.AI — Sync the AI to all systems
+# Automates notifies, login/register notifies, new user live page visit, Discord perms
+
+[SYNC]
+version=1.0
+description=Donny AI syncs to ENGINE.exe, SmokeScreenEngine.exe, web, Discord
+
+[EVENTS]
+# Events that trigger Discord (and other) notifies. All enabled by default.
+AUTOMATES_NOTIFYS=1
+LOGIN_NOTIFY=1
+REGISTER_NOTIFY=1
+NEW_USER_LIVE_PAGE_VISIT=1
+KEY_REDEEM_NOTIFY=1
+SYSTEM_HEALTH=1
+ENGINE_PING=1
+
+[EVENT_SOURCES]
+# Where each event is emitted (server = Express, bot = Discord bot, engine = ENGINE.exe)
+LOGIN_NOTIFY=server
+REGISTER_NOTIFY=server
+NEW_USER_LIVE_PAGE_VISIT=server
+KEY_REDEEM_NOTIFY=server
+AUTOMATES_NOTIFYS=bot
+SYSTEM_HEALTH=bot
+ENGINE_PING=engine
+
+[DISCORD_BOT_PERMISSIONS]
+# Additional permissions for the current Discord bot token (OAuth2 URL or integer).
+permission_names=ViewChannel,SendMessages,SendMessagesInThreads,EmbedLinks,AttachFiles,ReadMessageHistory,AddReactions,UseExternalEmojis,ManageMessages,ManageThreads,MentionEveryone,ManageRoles,ManageWebhooks
+permission_integer=275146673216
+scopes=bot,applications.commands
+
+[DISCORD_INTENTS]
+Guilds=1
+GuildMessages=1
+MessageContent=1
+GuildMembers=1
+DirectMessages=1
+GuildPresences=0
+
+[CHANNELS]
+LOGIN_NOTIFY=ANNOUNCEMENTS
+REGISTER_NOTIFY=ANNOUNCEMENTS
+NEW_USER_LIVE_PAGE_VISIT=CHAT
+KEY_REDEEM_NOTIFY=ANNOUNCEMENTS
+AUTOMATES_NOTIFYS=ANNOUNCEMENTS
+
+[INVITE_URL]
+# Re-invite bot: https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=275146673216&scope=bot%20applications.commands
