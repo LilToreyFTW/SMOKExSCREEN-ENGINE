@@ -11,6 +11,8 @@ out/
 *.exe
 bin/
 obj/
+**/ENGINE/bin/
+**/ENGINE/obj/
 .vs/
 *.user
 *.suo
