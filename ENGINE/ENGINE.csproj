@@ -23,6 +23,9 @@
     <Compile Remove="HardwareId.cs" />
     <Compile Remove="Theme.cs" />
     <Compile Remove="EnginePage.cs" />
+    <Compile Remove="SplashScreen.cs" />
+    <Compile Remove="PythonProcessManager.cs" />
+    <Compile Remove="VersionChecker.cs" />
   </ItemGroup>
 
   <ItemGroup>
