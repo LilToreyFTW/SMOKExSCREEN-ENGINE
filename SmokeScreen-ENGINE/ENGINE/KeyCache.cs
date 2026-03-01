@@ -127,26 +127,6 @@ namespace SmokeScreenEngine
         }
 
         /// <summary>
-        /// Insert or update a single key from sync endpoint.
-        /// </summary>
-        public static void AddOrUpdate(string key, string durationType, long durationMs, bool used = false)
-        {
-            using var conn = new SqliteConnection($"Data Source={DbPath}");
-            conn.Open();
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"
-                INSERT OR REPLACE INTO keys (key_value, duration_type, used, redeemed_at, expires_at, fetched_at)
-                VALUES ($1,$2,$3,$4,$5,$6)";
-            cmd.Parameters.AddWithValue("$1", key);
-            cmd.Parameters.AddWithValue("$2", durationType ?? "");
-            cmd.Parameters.AddWithValue("$3", used ? 1 : 0);
-            cmd.Parameters.AddWithValue("$4", (long?)null);
-            cmd.Parameters.AddWithValue("$5", (long?)null);
-            cmd.Parameters.AddWithValue("$6", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
-            cmd.ExecuteNonQuery();
-        }
-
-        /// <summary>
         /// Return a list of all cached keys (for debugging/inspection).
         /// </summary>
         public static List<CachedKey> GetAll()

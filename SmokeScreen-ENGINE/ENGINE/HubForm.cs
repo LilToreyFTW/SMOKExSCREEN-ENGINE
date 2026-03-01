@@ -1,10 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Net.Http;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -25,10 +20,9 @@ namespace SmokeScreenEngine
         private Button _redeemBtn = null!;
         private Label _redeemResult = null!;
         private Button _refreshKeysBtn = null!;
-        private Button _generateKeysBtn = null!;
         private Label _keysCountLabel = null!;
+        private Label _pingLabel = null!;
         private readonly System.Windows.Forms.Timer _pingTimer = new();
-        private MsPingStatus _msPingStatus = null!;
 
         private string? _token;
         private UserInfo? _user;
@@ -59,14 +53,19 @@ namespace SmokeScreenEngine
             _tabs.TabPages.Add(BuildEngineTab());
             _tabs.TabPages.Add(BuildToolsTab());
 
-            // Upper‑right ping/status control
-            _msPingStatus = new MsPingStatus
+            // Upper‑left ping/status label
+            _pingLabel = new Label
             {
-                Location = new Point(this.ClientSize.Width - 140, 8),
-                Size = new Size(130, 30),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right
+                Text = "…",
+                Font = new Font("Consolas", 8),
+                ForeColor = Theme.TextSecondary,
+                BackColor = Color.FromArgb(32, 36, 44),
+                AutoSize = false,
+                Size = new Size(120, 24),
+                Location = new Point(8, 8),
+                TextAlign = ContentAlignment.MiddleCenter
             };
-            Controls.Add(_msPingStatus);
+            Controls.Add(_pingLabel);
 
             Controls.Add(_tabs);
         }
@@ -195,23 +194,10 @@ namespace SmokeScreenEngine
             _refreshKeysBtn.FlatAppearance.BorderSize = 0;
             _refreshKeysBtn.Click += async (_, __) => await RefreshKeysAsync();
 
-            _generateKeysBtn = new Button
-            {
-                Text = "GENERATE KEYS",
-                Bounds = new Rectangle(24, 230, 160, 40),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Theme.AccentBlue,
-                ForeColor = Color.White,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Cursor = Cursors.Hand
-            };
-            _generateKeysBtn.FlatAppearance.BorderSize = 0;
-            _generateKeysBtn.Click += async (_, __) => await GenerateKeysAsync();
-
             _keysCountLabel = new Label
             {
                 Text = "Cached unused keys: ?",
-                Bounds = new Rectangle(200, 240, 640, 20),
+                Bounds = new Rectangle(200, 190, 640, 20),
                 ForeColor = Theme.TextSecondary
             };
 
@@ -221,7 +207,6 @@ namespace SmokeScreenEngine
             tp.Controls.Add(_redeemBtn);
             tp.Controls.Add(_redeemResult);
             tp.Controls.Add(_refreshKeysBtn);
-            tp.Controls.Add(_generateKeysBtn);
             tp.Controls.Add(_keysCountLabel);
 
             return tp;
@@ -318,14 +303,15 @@ namespace SmokeScreenEngine
 
         private async Task LoadSessionAsync()
         {
-            // Sync with Clerk first
-            await ClerkAuth.SyncSessionAsync();
-            _token = ClerkAuth.SessionToken;
-            if (!string.IsNullOrEmpty(_token))
-            {
-                _user = new UserInfo { Id = "clerk-user", Username = "Clerk User" };
-                _license = new LicenseStatus(true, false, "LIFETIME", null, null, null, long.MaxValue);
-            }
+            var res = await DiscordAuth.TryAutoLoginAsync();
+            if (!res.IsSuccess) { UpdateUi(); UpdateKeysCount(); return; }
+
+            _token = res.Token;
+            _user = res.User;
+
+            if (_token != null)
+                _license = await DiscordAuth.ValidateLicenseAsync(_token);
+
             UpdateUi();
             UpdateKeysCount();
             // Invisible background sync on startup if we have an admin token
@@ -360,13 +346,13 @@ namespace SmokeScreenEngine
             }
         }
 
-        private Task DoLogoutAsync()
+        private async Task DoLogoutAsync()
         {
-            if (_token == null) return Task.CompletedTask;
+            if (_token == null) return;
             SetBusy(true);
             try
             {
-                ClerkAuth.SignOut();
+                await DiscordAuth.LogoutAsync(_token);
             }
             finally
             {
@@ -377,7 +363,6 @@ namespace SmokeScreenEngine
                 SetBusy(false);
                 UpdateUi();
             }
-            return Task.CompletedTask;
         }
 
         private async Task RedeemAsync()
@@ -398,11 +383,13 @@ namespace SmokeScreenEngine
             SetBusy(true);
             try
             {
-                var ok = await ClerkAuth.RedeemKeyAsync(key);
-                _redeemResult.Text = ok ? "Key redeemed via Clerk." : "Redeem failed.";
+                var (ok, message) = await DiscordAuth.RedeemKeyAsync(_token, key);
+                _redeemResult.Text = message;
                 _redeemResult.ForeColor = ok ? Theme.Success : Theme.Error;
 
                 if (ok) KeyCache.MarkUsed(key);
+
+                _license = await DiscordAuth.ValidateLicenseAsync(_token);
             }
             finally
             {
@@ -440,31 +427,9 @@ namespace SmokeScreenEngine
             _logoutBtn.Enabled = !busy && (_token != null);
             _redeemBtn.Enabled = !busy && (_token != null);
             _refreshKeysBtn.Enabled = !busy && (_token != null);
-            _generateKeysBtn.Enabled = !busy && (_token != null);
             _openMarketplaceBtn.Enabled = !busy;
             _openCloudBtn.Enabled = !busy && (_token != null);
             Cursor = busy ? Cursors.WaitCursor : Cursors.Default;
-        }
-
-        private async Task GenerateKeysAsync()
-        {
-            SetBusy(true);
-            try
-            {
-                await KeyGenerator.GenerateAndSendBatchAsync(10, "1_MONTH");
-                _redeemResult.Text = "Generated and saved 10 keys (1_MONTH) to server, Discord, and sourcelink.";
-                _redeemResult.ForeColor = Theme.TextSecondary;
-            }
-            catch (Exception ex)
-            {
-                _redeemResult.Text = $"Error generating keys: {ex.Message}";
-                _redeemResult.ForeColor = Theme.Error;
-            }
-            finally
-            {
-                SetBusy(false);
-                UpdateKeysCount();
-            }
         }
 
         private async Task RefreshKeysAsync()
@@ -474,19 +439,6 @@ namespace SmokeScreenEngine
             try
             {
                 int added = await KeyCache.SyncFromWebsiteAsync(_token);
-                // Use public sync endpoint instead of admin
-                var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
-                var resp = await client.GetAsync("https://smok-ex-screen-engine.vercel.app/api/sync");
-                if (resp.IsSuccessStatusCode)
-                {
-                    var json = await resp.Content.ReadAsStringAsync();
-                    var data = JsonSerializer.Deserialize<SyncResponse>(json);
-                    if (data?.Keys != null)
-                    {
-                        foreach (var k in data.Keys) KeyCache.AddOrUpdate(k.KeyValue, k.DurationType, k.DurationMs, false);
-                        added += data.Keys.Count;
-                    }
-                }
                 _redeemResult.Text = added > 0 ? $"Fetched {added} new keys." : "No new keys.";
                 _redeemResult.ForeColor = Theme.TextSecondary;
                 _keysInSync = true;
@@ -539,27 +491,27 @@ namespace SmokeScreenEngine
                     var txt = await res.Content.ReadAsStringAsync();
                     var status = txt.Trim().Replace("\"", "");
                     var syncIcon = _keysInSync ? "✓" : "⚠";
-                    _msPingStatus.BeginInvoke((MethodInvoker)delegate
+                    _pingLabel.Invoke((MethodInvoker)delegate
                     {
-                        _msPingStatus.Text = $"{syncIcon} {status}";
-                        _msPingStatus.ForeColor = _keysInSync ? Theme.Success : Theme.TextSecondary;
+                        _pingLabel.Text = $"{syncIcon} {status}";
+                        _pingLabel.ForeColor = _keysInSync ? Theme.Success : Theme.TextSecondary;
                     });
                 }
                 else
                 {
-                    _msPingStatus.BeginInvoke((MethodInvoker)delegate
+                    _pingLabel.Invoke((MethodInvoker)delegate
                     {
-                        _msPingStatus.Text = "✗ offline";
-                        _msPingStatus.ForeColor = Theme.Error;
+                        _pingLabel.Text = "✗ offline";
+                        _pingLabel.ForeColor = Theme.Error;
                     });
                 }
             }
             catch
             {
-                _msPingStatus.BeginInvoke((MethodInvoker)delegate
+                _pingLabel.Invoke((MethodInvoker)delegate
                 {
-                    _msPingStatus.Text = "✗ offline";
-                    _msPingStatus.ForeColor = Theme.Error;
+                    _pingLabel.Text = "✗ offline";
+                    _pingLabel.ForeColor = Theme.Error;
                 });
             }
         }

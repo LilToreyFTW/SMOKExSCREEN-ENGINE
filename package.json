@@ -7,9 +7,11 @@
     "start": "next start"
   },
   "dependencies": {
+    "@clerk/nextjs": "latest",
+    "discord.js": "^14.14.1",
+    "express": "^5.2.1",
     "next": "latest",
     "react": "latest",
-    "react-dom": "latest",
-    "@clerk/nextjs": "latest"
+    "react-dom": "latest"
   }
 }
