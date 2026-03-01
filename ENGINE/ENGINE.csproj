@@ -23,6 +23,8 @@
     <Compile Remove="HardwareId.cs" />
     <Compile Remove="Theme.cs" />
     <Compile Remove="EnginePage.cs" />
+    <Compile Remove="ClerkAuth.cs" />
+    <Compile Remove="MsPingStatus.cs" />
   </ItemGroup>
 
   <ItemGroup>
