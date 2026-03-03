@@ -15,6 +15,7 @@ obj/
 **/ENGINE/obj/
 *.zip
 **/node_modules/
+SmokeScreen-ENGINE/html/logo/
 .vs/
 *.user
 *.suo
