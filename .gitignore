@@ -13,6 +13,8 @@ bin/
 obj/
 **/ENGINE/bin/
 **/ENGINE/obj/
+*.zip
+**/node_modules/
 .vs/
 *.user
 *.suo

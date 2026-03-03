@@ -1,2 +1,9 @@
 .vercel
 node_modules
+ENGINE/bin/
+ENGINE/obj/
+*.exe
+*.zip
+*.dll
+*.pdb
+*.resources.dll
