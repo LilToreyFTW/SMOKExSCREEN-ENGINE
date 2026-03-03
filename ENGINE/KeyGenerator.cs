@@ -25,7 +25,7 @@ namespace SmokeScreenEngine
         public static async Task GenerateAndSendBatchAsync(int count = 10, string durationType = "1_MONTH")
         {
             var keys = Enumerable.Range(0, count).Select(_ => GenerateKey()).ToList();
-            Console.WriteLine($"Generated {keys.Count} keys ({durationType}).");
+            Console.WriteLine($"Generated {keys.Count} keys ({durationType}) and sent to discord with discord webhook and actually happen.");
             await KeyExtension.SaveKeysToAllAsync(keys, durationType);
         }
     }

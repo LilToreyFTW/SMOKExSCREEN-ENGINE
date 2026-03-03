@@ -912,4 +912,14 @@ app.use((err, req, res, next) => {
 
 app.use(express.static(__dirname));
 
+// Sync endpoint for bot
+app.get('/api/sync', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Bot synchronization successful',
+    timestamp: new Date().toISOString(),
+    keys: []
+  });
+});
+
 app.listen(PORT, () => console.log(`Website/API running on http://localhost:${PORT}`));

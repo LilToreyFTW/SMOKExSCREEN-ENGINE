@@ -2,7 +2,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace EngineClient
+namespace SmokeScreenEngine
 {
     static class Program
     {
@@ -10,7 +10,7 @@ namespace EngineClient
         static void Main()
         {
             ApplicationConfiguration.Initialize();
-            Application.Run(new MainForm());
+            Application.Run(new HubForm());
         }
     }
 }

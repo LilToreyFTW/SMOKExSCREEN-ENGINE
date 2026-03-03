@@ -15,6 +15,8 @@ public class LicenseKey
     public string? Country { get; set; }
     public string? AppVersion { get; set; }
     public bool IsOwner { get; set; }
+    public bool IsRecoilKey { get; set; }
+    public string? GameType { get; set; } // "R6S", "CODW", "AR", "FN"
 }
 
 public class AnalyticsEvent

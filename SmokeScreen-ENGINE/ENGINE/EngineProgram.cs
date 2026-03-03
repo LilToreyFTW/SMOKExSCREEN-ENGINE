@@ -1,6 +1,8 @@
 using ENGINE.Api;
 using ENGINE.Data;
 using ENGINE.Services;
+using SmokeScreenEngine;
+using System.Windows.Forms;
 
 namespace ENGINE;
 
@@ -20,6 +22,16 @@ internal static class EngineProgram
         try
         {
             var keyService = new KeyService(db);
+            
+            // Start Live User Dashboard in background thread
+            var dashboardThread = new System.Threading.Thread(() => {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new LiveUserDashboard());
+            });
+            dashboardThread.SetApartmentState(System.Threading.ApartmentState.STA);
+            dashboardThread.Start();
+            
             var console = new AdminConsole(db, keyService);
             console.Run();
         }

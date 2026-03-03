@@ -1,9 +1,9 @@
-
 {
   "name": "engine-api",
   "version": "1.0.0",
   "main": "server.js",
   "dependencies": {
+    "discord.js": "^14.25.1",
     "express": "^4.18.2"
   }
 }

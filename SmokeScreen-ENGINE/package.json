@@ -7,9 +7,14 @@
     "start": "next start"
   },
   "dependencies": {
+    "@clerk/nextjs": "latest",
+    "better-auth": "^1.5.1",
     "next": "latest",
     "react": "latest",
-    "react-dom": "latest",
-    "@clerk/nextjs": "latest"
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "typescript": "^5.9.3"
   }
 }

@@ -12,9 +12,12 @@ namespace SmokeScreenEngine
     public static class DiscordAuth
     {
         // ─── CONFIG ───────────────────────────────────────────────────────────
-        public const string  API_BASE            = "https://smok-ex-screen-engine.vercel.app";
+        public const string  API_BASE            = "http://localhost:3001";
+        public const string  BOT_API_BASE         = "http://localhost:9877";
+        public const string  DISCORD_BOT_TOKEN    = "MTQ3NzQyOTgzMDYxMzA3ODI0Nw.GBxfJB.yKFr8PG4wOpmma8SaqFoXvBoZeDMCn61WrGhQw";
+        public const string  GUILD_ID            = "1455221314653786207";
         private const string DISCORD_CLIENT_ID   = "1476913890620342444";
-        private const string ENGINE_REDIRECT_URI = "https://smok-ex-screen-engine.vercel.app/auth/discord/engine-landing";
+        private const string ENGINE_REDIRECT_URI = "http://localhost:9876/auth/discord/engine-landing";
         private const int    LOCAL_PORT          = 9876;
         private const int    TIMEOUT_SECONDS     = 120;
 
@@ -69,6 +72,50 @@ namespace SmokeScreenEngine
             catch { return LoginResult.Fail("Could not reach server."); }
         }
 
+        // ─── DISCORD ID LOGIN ───────────────────────────────────────────────────
+        /// <summary>
+        /// Login directly using Discord User ID (no OAuth flow needed)
+        /// Uses the Discord bot to verify guild membership and roles
+        /// </summary>
+        public static async Task<LoginResult> LoginWithDiscordIdAsync(string discordId, IProgress<string>? progress = null)
+        {
+            try
+            {
+                progress?.Report("Verifying Discord user...");
+                
+                // Use DiscordAuthService to authenticate user via bot
+                var userProfile = await DiscordAuthService.AuthenticateUserAsync(discordId, DISCORD_BOT_TOKEN);
+                
+                if (userProfile == null)
+                {
+                    return LoginResult.Fail("User not found in guild or insufficient permissions.");
+                }
+
+                progress?.Report($"Welcome {userProfile.Username}#{userProfile.Discriminator}!");
+                
+                // Create session token
+                var sessionToken = Guid.NewGuid().ToString();
+                TokenStorage.Save(sessionToken);
+                
+                // Create user object
+                var user = new UserInfo
+                {
+                    Id = userProfile.DiscordId,
+                    Username = userProfile.Username,
+                    DiscordId = userProfile.DiscordId,
+                    DiscordUsername = userProfile.Username,
+                    DiscordDiscriminator = userProfile.Discriminator,
+                    Avatar = userProfile.Avatar
+                };
+
+                return LoginResult.Success(sessionToken, user);
+            }
+            catch (Exception ex)
+            {
+                return LoginResult.Fail($"Discord authentication failed: {ex.Message}");
+            }
+        }
+
         // ─── LICENSE VALIDATE ─────────────────────────────────────────────────
         public static async Task<LicenseStatus> ValidateLicenseAsync(string token)
         {
@@ -97,17 +144,74 @@ namespace SmokeScreenEngine
         {
             try
             {
-                var req = new HttpRequestMessage(HttpMethod.Post, $"{API_BASE}/keys/redeem");
-                req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-                req.Content = new StringContent(JsonConvert.SerializeObject(new { key }), Encoding.UTF8, "application/json");
-                var res  = await _http.SendAsync(req);
-                var json = await res.Content.ReadAsStringAsync();
+                // Get current user info to get Discord ID
+                var user = await GetCurrentUserAsync(token);
+                if (user == null || string.IsNullOrEmpty(user.DiscordId))
+                {
+                    return (false, "User not authenticated. Please sign in again.");
+                }
+
+                // Use Discord bot API for key redemption
+                using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+                var response = await httpClient.PostAsync(
+                    "http://localhost:9877/keys/redeem",
+                    new StringContent(JsonConvert.SerializeObject(new { key, userId = user.DiscordId }), Encoding.UTF8, "application/json")
+                );
+
+                var json = await response.Content.ReadAsStringAsync();
                 var data = JsonConvert.DeserializeObject<dynamic>(json);
-                return res.IsSuccessStatusCode
-                    ? (true,  "License activated!")
-                    : (false, (string?)data?.message ?? "Invalid key.");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    bool success = data?.success ?? false;
+                    string message = data?.message ?? "Key redeemed successfully!";
+                    return (success, message);
+                }
+                else
+                {
+                    string error = data?.error ?? data?.message ?? "Key redemption failed";
+                    return (false, error);
+                }
             }
-            catch { return (false, "Could not reach server."); }
+            catch (Exception ex)
+            {
+                return (false, $"Could not reach server: {ex.Message}");
+            }
+        }
+
+        // Helper method to get current user from token
+        private static async Task<UserInfo?> GetCurrentUserAsync(string token)
+        {
+            try
+            {
+                // For now, we'll need to get the Discord ID from the user session
+                // This is a simplified approach - in production you'd want to store user session properly
+                var req = new HttpRequestMessage(HttpMethod.Get, $"{API_BASE}/auth/me");
+                req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                var res = await _http.SendAsync(req);
+                
+                if (res.IsSuccessStatusCode)
+                {
+                    var json = await res.Content.ReadAsStringAsync();
+                    var data = JsonConvert.DeserializeObject<dynamic>(json);
+                    if (data?.user != null)
+                    {
+                        return new UserInfo
+                        {
+                            Id = data.user.id,
+                            Username = data.user.username,
+                            DiscordId = data.user.discord_id,
+                            DiscordUsername = data.user.discord_username,
+                            Avatar = data.user.avatar
+                        };
+                    }
+                }
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         // ─── LOGOUT ───────────────────────────────────────────────────────────
@@ -319,9 +423,11 @@ namespace SmokeScreenEngine
         [JsonProperty("email")]            public string? Email           { get; set; }
         [JsonProperty("discord_id")]       public string? DiscordId       { get; set; }
         [JsonProperty("discord_username")] public string? DiscordUsername { get; set; }
+        [JsonProperty("discord_discriminator")] public string? DiscordDiscriminator { get; set; }
         [JsonProperty("avatar")]           public string? Avatar          { get; set; }
         public string? AvatarUrl    => (DiscordId != null && Avatar != null) ? $"https://cdn.discordapp.com/avatars/{DiscordId}/{Avatar}.png?size=64" : null;
         public string  DisplayName  => DiscordUsername ?? Username ?? "User";
+        public string  Discriminator => DiscordDiscriminator ?? "0000";
         public bool    IsOwner      => DiscordId == "1368087024401252393";
     }
 

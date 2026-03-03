@@ -1,28 +1,39 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
     <AssemblyName>ENGINE</AssemblyName>
     <RootNamespace>ENGINE</RootNamespace>
   </PropertyGroup>
 
-  <!-- Exclude GUI/WinForms client files from the API/console project -->
   <ItemGroup>
-    <Compile Remove="ChartControl.cs" />
-    <Compile Remove="CloudDashboardForm.cs" />
-    <Compile Remove="GUIProgram.cs" />
+    <!-- Exclude all GUI and Windows-specific files except dashboard -->
     <Compile Remove="HubForm.cs" />
     <Compile Remove="MainForm.cs" />
+    <Compile Remove="SplashScreen.cs" />
+    <Compile Remove="GUIProgram.cs" />
+    <Compile Remove="ChartControl.cs" />
+    <Compile Remove="CloudDashboardForm.cs" />
     <Compile Remove="MarketplaceForm.cs" />
-    <Compile Remove="Program.cs" />
     <Compile Remove="SpooferForm.cs" />
-    <Compile Remove="EngineClient.cs" />
-    <Compile Remove="HardwareId.cs" />
+    <Compile Remove="RecoilV2Integration.cs" />
+    <Compile Remove="PythonProcessManager.cs" />
+    <Compile Remove="KeyUserGrid.cs" />
+    <Compile Remove="DiscordAuth.cs" />
+    <Compile Remove="DiscordAuthService.cs" />
+    <Compile Remove="DiscordBotManager.cs" />
     <Compile Remove="Theme.cs" />
+    <Compile Remove="HardwareId.cs" />
+    <Compile Remove="ApiRecoilStatus.cs" />
     <Compile Remove="EnginePage.cs" />
+    <Compile Remove="EngineClient.cs" />
+    <Compile Remove="Program.cs" />
+    <Compile Remove="ApiService.cs" />
+    <Compile Remove="EngineAI.cs" />
+    <Compile Remove="EnhancedRecoilSystem.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,5 +42,4 @@
     <PackageReference Include="Spectre.Console" Version="0.49.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
-
 </Project>

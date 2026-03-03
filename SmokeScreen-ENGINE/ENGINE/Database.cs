@@ -34,7 +34,9 @@ public class Database
                 IpAddress   TEXT,
                 Country     TEXT,
                 AppVersion  TEXT,
-                IsOwner     INTEGER NOT NULL DEFAULT 0
+                IsOwner     INTEGER NOT NULL DEFAULT 0,
+                IsRecoilKey INTEGER NOT NULL DEFAULT 0,
+                GameType    TEXT
             );
 
             CREATE TABLE IF NOT EXISTS AnalyticsEvents (
@@ -56,6 +58,10 @@ public class Database
                 BannedAt    TEXT NOT NULL
             );
         ");
+        
+        // Add new columns if they don't exist (for database migrations)
+        try { conn.Execute("ALTER TABLE LicenseKeys ADD COLUMN IsRecoilKey INTEGER NOT NULL DEFAULT 0"); } catch { }
+        try { conn.Execute("ALTER TABLE LicenseKeys ADD COLUMN GameType TEXT"); } catch { }
     }
 
     // ─── Keys ────────────────────────────────────────────────────────────────
@@ -78,9 +84,24 @@ public class Database
         foreach (var k in keys)
         {
             conn.Execute(@"
-                INSERT OR IGNORE INTO LicenseKeys (Key, Duration, DurationDays, Status, CreatedAt, IsOwner)
-                VALUES (@Key, @Duration, @DurationDays, @Status, @CreatedAt, @IsOwner)",
-                new { k.Key, k.Duration, k.DurationDays, k.Status, CreatedAt = k.CreatedAt.ToString("o"), IsOwner = k.IsOwner ? 1 : 0 }, tx);
+                INSERT OR IGNORE INTO LicenseKeys (Key, Duration, DurationDays, Status, CreatedAt, IsOwner, IsRecoilKey, GameType)
+                VALUES (@Key, @Duration, @DurationDays, @Status, @CreatedAt, @IsOwner, @IsRecoilKey, @GameType)",
+                new { k.Key, k.Duration, k.DurationDays, k.Status, CreatedAt = k.CreatedAt.ToString("o"), IsOwner = k.IsOwner ? 1 : 0, IsRecoilKey = k.IsRecoilKey ? 1 : 0, k.GameType }, tx);
+        }
+        tx.Commit();
+    }
+
+    public void InsertRecoilKeys(IEnumerable<LicenseKey> keys)
+    {
+        using var conn = Connect();
+        conn.Open();
+        using var tx = conn.BeginTransaction();
+        foreach (var k in keys)
+        {
+            conn.Execute(@"
+                INSERT OR IGNORE INTO LicenseKeys (Key, Duration, DurationDays, Status, CreatedAt, IsRecoilKey, GameType)
+                VALUES (@Key, @Duration, @DurationDays, @Status, @CreatedAt, 1, @GameType)",
+                new { k.Key, k.Duration, k.DurationDays, k.Status, CreatedAt = k.CreatedAt.ToString("o"), k.GameType }, tx);
         }
         tx.Commit();
     }
@@ -257,6 +278,41 @@ public class Database
             .ToList<dynamic>();
     }
 
+    public int GetActiveUsersCount()
+    {
+        using var conn = Connect();
+        // Count unique HWIDs with active sessions in the last hour
+        var oneHourAgo = DateTime.UtcNow.AddHours(-1).ToString("o");
+        return conn.ExecuteScalar<int>(@"
+            SELECT COUNT(DISTINCT HWID) FROM AnalyticsEvents 
+            WHERE HWID IS NOT NULL AND Timestamp >= @since",
+            new { since = oneHourAgo });
+    }
+
+    public dynamic GetTodayStats()
+    {
+        using var conn = Connect();
+        var today = DateTime.UtcNow.Date.ToString("o");
+        var tomorrow = DateTime.UtcNow.Date.AddDays(1).ToString("o");
+        
+        var generated = conn.ExecuteScalar<int>(@"
+            SELECT COUNT(*) FROM LicenseKeys WHERE CreatedAt >= @today",
+            new { today });
+            
+        var activated = conn.ExecuteScalar<int>(@"
+            SELECT COUNT(*) FROM LicenseKeys WHERE ActivatedAt >= @today",
+            new { today });
+            
+        var failed = conn.ExecuteScalar<int>(@"
+            SELECT COUNT(*) FROM AnalyticsEvents WHERE Timestamp >= @today AND Success=0",
+            new { today });
+            
+        // Estimate revenue (rough calculation)
+        var revenue = generated * 5.0m + activated * 10.0m;
+        
+        return new { Generated = generated, Activated = activated, Failed = failed, Revenue = revenue };
+    }
+
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private static void LogEvent(SqliteConnection conn, string type, string? key, string? hwid,
@@ -283,6 +339,8 @@ public class Database
         Country = r.Country,
         AppVersion = r.AppVersion,
         IsOwner = r.IsOwner == 1,
+        IsRecoilKey = r.IsRecoilKey == 1,
+        GameType = r.GameType,
     };
 
     private static AnalyticsEvent MapEvent(dynamic r) => new()

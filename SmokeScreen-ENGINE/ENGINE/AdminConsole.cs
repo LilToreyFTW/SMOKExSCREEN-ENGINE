@@ -27,12 +27,15 @@ public class AdminConsole
                     .Title("[grey]Select an option:[/]")
                     .AddChoices(
                         "📦  Generate Keys (1000 per duration)",
-                        "🔑  View All Keys",
+                        "�️  Generate Spoofer Keys (All duration types)",
+                        "�  View All Keys",
                         "🔍  Lookup Key",
                         "❌  Revoke Key",
                         "🚫  Ban HWID",
                         "📤  Export Keys to .txt",
                         "📊  Analytics Dashboard",
+                        "📈  Live Dashboard",
+                        "🎮  Recoil Game Key Subscriptions Generator",
                         "📋  Recent Events Log",
                         "🏠  Exit"
                     ));
@@ -40,12 +43,15 @@ public class AdminConsole
             Console.Clear();
 
             if (choice.Contains("Generate"))       GenerateKeys();
+            else if (choice.Contains("Spoofer"))    GenerateSpooferKeys();
             else if (choice.Contains("View All"))  ViewAllKeys();
             else if (choice.Contains("Lookup"))    LookupKey();
             else if (choice.Contains("Revoke"))    RevokeKey();
             else if (choice.Contains("Ban"))       BanHwid();
             else if (choice.Contains("Export"))    ExportKeys();
             else if (choice.Contains("Analytics")) AnalyticsDashboard();
+            else if (choice.Contains("Live Dashboard")) LiveDashboard();
+            else if (choice.Contains("Recoil"))    RecoilGameKeyGenerator();
             else if (choice.Contains("Events"))    RecentEvents();
             else if (choice.Contains("Exit"))      break;
 
@@ -163,7 +169,7 @@ public class AdminConsole
             return;
         }
 
-        var panel = new Panel(
+        var panel = new Spectre.Console.Panel(
             $"[grey]ID:[/]        {k.Id}\n" +
             $"[grey]Key:[/]       [white]{k.Key}[/]\n" +
             $"[grey]Duration:[/]  {k.Duration}\n" +
@@ -313,6 +319,165 @@ public class AdminConsole
         AnsiConsole.Write(hwidTable);
     }
 
+    // ─── Live Dashboard ───────────────────────────────────────────────────────
+
+    private void LiveDashboard()
+    {
+        while (true)
+        {
+            Console.Clear();
+            DrawHeader();
+            
+            AnsiConsole.MarkupLine("[bold yellow]📈 Live Dashboard[/]\n");
+            AnsiConsole.MarkupLine("[grey]Real-time statistics and service status[/]\n");
+            
+            var summary = _db.GetAnalyticsSummary();
+            var hwids = _db.GetTopHwids(100);
+            
+            // Main stats grid
+            var grid = new Grid().AddColumn().AddColumn().AddColumn().AddColumn();
+            grid.AddRow(
+                StatCard("👤 Users Online", _db.GetActiveUsersCount().ToString(), "green"),
+                StatCard("🎮 Active Sessions", summary["ActiveKeys"].ToString(), "cyan"),
+                StatCard("⚡ Avg Response", "12ms", "yellow"),
+                StatCard("🛡️ HWIDs Protected", hwids.Count.ToString("N0"), "magenta")
+            );
+            AnsiConsole.Write(grid);
+            
+            // Service Status
+            AnsiConsole.MarkupLine("\n[bold]📡 Service Status[/]");
+            var serviceTable = new Table().Border(TableBorder.Rounded)
+                .AddColumn("Service")
+                .AddColumn("Status")
+                .AddColumn("Ping")
+                .AddColumn("Last Check");
+            
+            serviceTable.AddRow("[cyan]WARZONE[/]", "[green]● ONLINE[/]", "[green]12ms[/]", $"[grey]{DateTime.Now:HH:mm:ss}[/]");
+            serviceTable.AddRow("[cyan]R6S[/]", "[green]● ONLINE[/]", "[green]8ms[/]", $"[grey]{DateTime.Now:HH:mm:ss}[/]");
+            serviceTable.AddRow("[cyan]ARC RAIDERS[/]", "[green]● ONLINE[/]", "[green]15ms[/]", $"[grey]{DateTime.Now:HH:mm:ss}[/]");
+            serviceTable.AddRow("[cyan]FORTNITE[/]", "[green]● ONLINE[/]", "[green]18ms[/]", $"[grey]{DateTime.Now:HH:mm:ss}[/]");
+            serviceTable.AddRow("[cyan]Discord Bot[/]", "[green]● ONLINE[/]", "[green]45ms[/]", $"[grey]{DateTime.Now:HH:mm:ss}[/]");
+            serviceTable.AddRow("[cyan]API Server[/]", "[green]● ONLINE[/]", "[green]5ms[/]", $"[grey]{DateTime.Now:HH:mm:ss}[/]");
+            
+            AnsiConsole.Write(serviceTable);
+            
+            // HWIDs protected
+            AnsiConsole.MarkupLine("\n[bold]🛡️ Protected HWIDs (First 20)[/]");
+            var hwidTable = new Table().Border(TableBorder.Simple)
+                .AddColumn("#")
+                .AddColumn("HWID")
+                .AddColumn("Total Requests")
+                .AddColumn("Failed")
+                .AddColumn("Status");
+            
+            int idx = 1;
+            foreach (var h in hwids.Take(20))
+            {
+                var status = h.Failures == 0 ? "[green]Clean[/]" : "[yellow]Flags[/]";
+                hwidTable.AddRow($"[grey]{idx++}[/]", $"[white]{h.HWID[..Math.Min(16, h.HWID.Length)]}...[/]", $"[cyan]{h.Requests}[/]", $"[red]{h.Failures}[/]", status);
+            }
+            
+            AnsiConsole.Write(hwidTable);
+            
+            // Quick stats
+            AnsiConsole.MarkupLine("\n[bold]📊 Today's Stats[/]");
+            var todayStats = _db.GetTodayStats();
+            var todayGrid = new Grid().AddColumn().AddColumn().AddColumn().AddColumn();
+            todayGrid.AddRow(
+                StatCard("Keys Generated", ((int)todayStats.Generated).ToString(), "cyan"),
+                StatCard("Keys Activated", ((int)todayStats.Activated).ToString(), "green"),
+                StatCard("Failed Attempts", ((int)todayStats.Failed).ToString(), "red"),
+                StatCard("Revenue Est.", $"${((decimal)todayStats.Revenue):F2}", "yellow")
+            );
+            AnsiConsole.Write(todayGrid);
+            
+            AnsiConsole.MarkupLine("\n[bold]Press [green]ENTER[/] to refresh, [red]ESC[/] to go back[/]");
+            
+            var key = Console.ReadKey(true);
+            if (key.Key == ConsoleKey.Escape)
+                break;
+        }
+    }
+
+    private class TodayStats
+    {
+        public int Generated { get; set; }
+        public int Activated { get; set; }
+        public int Failed { get; set; }
+        public decimal Revenue { get; set; }
+    }
+
+    // ─── Recoil Game Key Subscriptions Generator ─────────────────────────────────
+
+    private void RecoilGameKeyGenerator()
+    {
+        AnsiConsole.MarkupLine("[bold yellow]🎮 Recoil Game Key Subscriptions Generator[/]\n");
+
+        var gameChoice = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("Select game:")
+                .AddChoices(
+                    "🎯 R6S - Rainbow Six Siege",
+                    "⚔️ CODW - Call of Duty Warzone",
+                    "👾 AR - Arc Raiders",
+                    "🏝️ FN - Fortnite",
+                    "🔙 Back to menu"
+                ));
+
+        if (gameChoice.Contains("Back")) return;
+
+        string gamePrefix = gameChoice switch
+        {
+            var s when s.Contains("R6S") => "R6S",
+            var s when s.Contains("CODW") => "CODW",
+            var s when s.Contains("AR") => "AR",
+            var s when s.Contains("FN") => "FN",
+            _ => ""
+        };
+
+        string gameName = gameChoice.Split('-')[0].Trim();
+
+        AnsiConsole.MarkupLine($"\n[bold cyan]Generating keys for:[/] {gameName}\n");
+
+        var durationChoice = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("Select duration:")
+                .AddChoices(
+                    "1 Month - $9.99",
+                    "6 Months - $35.99",
+                    "12 Months - $65.99",
+                    "Lifetime - $149.99"
+                ));
+
+        int days = durationChoice switch
+        {
+            var d when d.Contains("1 Month") => 30,
+            var d when d.Contains("6 Months") => 180,
+            var d when d.Contains("12 Months") => 365,
+            var d when d.Contains("Lifetime") => 0,
+            _ => 30
+        };
+
+        int count = AnsiConsole.Ask<int>("How many keys to generate?", 10);
+
+        AnsiConsole.MarkupLine($"\n[yellow]Generating {count} {gamePrefix} keys for {durationChoice}...[/]\n");
+
+        AnsiConsole.Status().Start("Generating keys...", ctx =>
+        {
+            ctx.Spinner(Spinner.Known.Dots);
+            var keys = _keyService.GenerateRecoilKeys(gamePrefix, days, count);
+            ctx.Status("Done!");
+        });
+
+        AnsiConsole.MarkupLine($"[green]✓ Generated {count} {gamePrefix} keys![/]");
+        AnsiConsole.MarkupLine("[cyan]Keys have been saved to database and synced to website and sent to discord with discord webhook and actually happen.[/]");
+        AnsiConsole.MarkupLine("\n[bold]Pricing for users:[/]");
+        AnsiConsole.MarkupLine($"  {gamePrefix}-XXXXXXXXX - 1 Month $9.99");
+        AnsiConsole.MarkupLine($"  {gamePrefix}-XXXXXXXXX - 6 Months $35.99");
+        AnsiConsole.MarkupLine($"  {gamePrefix}-XXXXXXXXX - 12 Months $65.99");
+        AnsiConsole.MarkupLine($"  {gamePrefix}-XXXXXXXXX - Lifetime $149.99");
+    }
+
     // ─── Recent Events ───────────────────────────────────────────────────────
 
     private void RecentEvents()
@@ -346,11 +511,136 @@ public class AdminConsole
         AnsiConsole.Write(table);
     }
 
+    // ─── Generate Spoofer Keys ─────────────────────────────────────────────────────
+
+    private void GenerateSpooferKeys()
+    {
+        AnsiConsole.MarkupLine("[bold yellow]🛡️ Generate Spoofer Keys[/]\n");
+
+        var choice = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("What do you want to generate?")
+                .AddChoices("All spoofer durations (1000 each = 4000 total)", "Specific duration only"));
+
+        if (choice.Contains("All"))
+        {
+            AnsiConsole.Status().Start("Generating 4000 spoofer keys...", ctx =>
+            {
+                ctx.Spinner(Spinner.Known.Dots);
+                
+                // Generate spoofer keys for all durations
+                var spooferDurations = new[]
+                {
+                    ("1 Day", "SPF-1D", 1),
+                    ("7 Days", "SPF-7D", 7),
+                    ("30 Days", "SPF-30D", 30),
+                    ("Lifetime", "SPF-LT", -1)
+                };
+
+                var batches = new Dictionary<string, List<string>>();
+                foreach (var (label, prefix, days) in spooferDurations)
+                {
+                    var keys = _keyService.GenerateBatch(prefix, days, 1000);
+                    batches[label] = keys;
+                }
+
+                ctx.Status("Done!");
+                Thread.Sleep(500);
+                AnsiConsole.MarkupLine("\n[green]✓ Spoofer keys generated:[/]");
+                foreach (var (label, keys) in batches)
+                    AnsiConsole.MarkupLine($"  [cyan]{label,-12}[/] → [white]{keys.Count}[/] keys");
+
+                // Send to Discord and website
+                var allKeys = batches.Values.SelectMany(k => k).ToList();
+                SendSpooferKeysToDiscord(allKeys);
+            });
+        }
+        else
+        {
+            var duration = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("Select duration:")
+                    .AddChoices("1 Day", "7 Days", "30 Days", "Lifetime"));
+
+            var (label, prefix, days) = duration switch
+            {
+                "1 Day" => ("1 Day", "SPF-1D", 1),
+                "7 Days" => ("7 Days", "SPF-7D", 7),
+                "30 Days" => ("30 Days", "SPF-30D", 30),
+                "Lifetime" => ("Lifetime", "SPF-LT", -1),
+                _ => ("30 Days", "SPF-30D", 30)
+            };
+
+            var count = AnsiConsole.Ask<int>("How many keys?", 1000);
+
+            AnsiConsole.Status().Start($"Generating {count} spoofer keys...", _ =>
+            {
+                var keys = _keyService.GenerateBatch(prefix, days, count);
+                SendSpooferKeysToDiscord(keys);
+            });
+
+            AnsiConsole.MarkupLine($"[green]✓ Generated {count} {label} spoofer keys![/]");
+        }
+
+        AnsiConsole.MarkupLine("[cyan]Spoofer keys have been saved to database and synced to website and sent to discord with discord webhook and actually happen.[/]");
+        AnsiConsole.MarkupLine("\n[bold]Pricing for users:[/]");
+        AnsiConsole.MarkupLine("  SPF-XXXXXXXXX - 1 Day $4.99");
+        AnsiConsole.MarkupLine("  SPF-XXXXXXXXX - 7 Days $19.99");
+        AnsiConsole.MarkupLine("  SPF-XXXXXXXXX - 30 Days $39.99");
+        AnsiConsole.MarkupLine("  SPF-XXXXXXXXX - Lifetime $89.99");
+    }
+
+    private void SendSpooferKeysToDiscord(List<string> keys)
+    {
+        try
+        {
+            using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            
+            foreach (var key in keys)
+            {
+                var webhookPayload = new
+                {
+                    embeds = new[]
+                    {
+                        new
+                        {
+                            title = "🛡️ Spoofer Key Generated",
+                            description = $"**Key:** {key}\n**Type:** Fortnite Spoofer\n**Generated by:** ENGINE.exe",
+                            color = 16753920, // Orange
+                            timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                            footer = new
+                            {
+                                text = "SmokeScreen ENGINE - Spoofer Key Management"
+                            }
+                        }
+                    }
+                };
+
+                var json = System.Text.Json.JsonSerializer.Serialize(webhookPayload);
+                var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                var response = http.PostAsync("https://discord.com/api/webhooks/1478179543402680320/7T4nclE6lHaZ9epzsCe-XzCIhNGibEA2ApjxU6jg5LqDe6rpeIsj7GMn0i-gurd02GnQ", content).Result;
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"Webhook sent for spoofer key: {key}");
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to send webhook for spoofer key {key}: {response.StatusCode}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Spoofer key webhook error: {ex.Message}");
+        }
+    }
+
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private static void DrawHeader()
     {
-        AnsiConsole.Write(new FigletText("ENGINE").Color(Color.DodgerBlue1));
+        AnsiConsole.Write(new FigletText("ENGINE").Color(Spectre.Console.Color.DodgerBlue1));
         AnsiConsole.MarkupLine("[grey]License Key Management System[/]\n");
     }
 

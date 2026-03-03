@@ -20,6 +20,8 @@
     <Compile Remove="EngineProgram.cs" />
     <Compile Remove="Program.cs" />
     <Compile Remove="EngineClient.cs" />
+    <Compile Remove="UltimateDiscordBot.cs" />
+    <Compile Remove="DiscordBotLauncher.cs" />
   </ItemGroup>
 
   <ItemGroup>
