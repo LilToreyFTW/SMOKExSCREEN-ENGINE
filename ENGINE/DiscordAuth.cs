@@ -12,9 +12,9 @@ namespace SmokeScreenEngine
     public static class DiscordAuth
     {
         // ─── CONFIG ───────────────────────────────────────────────────────────
-        public const string  API_BASE            = "https://smok-ex-screen-engine.vercel.app";
+        public const string  API_BASE            = "https://smokescreen-engine.vercel.app";
         private const string DISCORD_CLIENT_ID   = "1476913890620342444";
-        private const string ENGINE_REDIRECT_URI = "https://smok-ex-screen-engine.vercel.app/auth/discord/engine-landing";
+        private const string ENGINE_REDIRECT_URI = "https://smokescreen-engine.vercel.app/auth/discord/engine-landing";
         private const int    LOCAL_PORT          = 9876;
         private const int    TIMEOUT_SECONDS     = 120;
 
@@ -92,12 +92,35 @@ namespace SmokeScreenEngine
             catch { return LicenseStatus.FromLegacy(false, 0); }
         }
 
+        private const string DISCORD_API = "https://discord.com/api/v10";
+
+        public static async Task<UserInfo?> GetUserFromTokenAsync(string token)
+        {
+            try
+            {
+                var req = new HttpRequestMessage(HttpMethod.Get, $"{DISCORD_API}/users/@me");
+                req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                var res = await _http.SendAsync(req);
+                if (!res.IsSuccessStatusCode) return null;
+                var data = JsonConvert.DeserializeObject<DiscordUserResponse>(await res.Content.ReadAsStringAsync());
+                if (data == null) return null;
+                return new UserInfo 
+                { 
+                    DiscordId = data.Id, 
+                    DiscordUsername = data.Username, 
+                    Email = data.Email,
+                    Avatar = data.Avatar
+                };
+            }
+            catch { return null; }
+        }
+
         // ─── REDEEM KEY ───────────────────────────────────────────────────────
         public static async Task<(bool ok, string message)> RedeemKeyAsync(string token, string key)
         {
             try
             {
-                var req = new HttpRequestMessage(HttpMethod.Post, $"{API_BASE}/keys/redeem");
+                var req = new HttpRequestMessage(HttpMethod.Post, $"{API_BASE}/api/keys/redeem-clerk");
                 req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                 req.Content = new StringContent(JsonConvert.SerializeObject(new { key }), Encoding.UTF8, "application/json");
                 var res  = await _http.SendAsync(req);
@@ -243,7 +266,18 @@ namespace SmokeScreenEngine
 
         // ─── JSON MODELS ──────────────────────────────────────────────────────
         private class MeResponse     { [JsonProperty("user")] public UserInfo? User { get; set; } }
-        private class AuthResponse   { [JsonProperty("sessionToken")] public string? SessionToken { get; set; } [JsonProperty("user")] public UserInfo? User { get; set; } }
+        private class AuthResponse   
+        { 
+            [JsonProperty("sessionToken")] public string? SessionToken { get; set; } 
+            [JsonProperty("user")] public UserInfo? User { get; set; } 
+        }
+        private class DiscordUserResponse
+        {
+            [JsonProperty("id")]          public string? Id       { get; set; }
+            [JsonProperty("username")]    public string? Username { get; set; }
+            [JsonProperty("email")]       public string? Email    { get; set; }
+            [JsonProperty("avatar")]      public string? Avatar   { get; set; }
+        }
         private class LicenseResponse
         {
             [JsonProperty("licensed")]        public bool    Licensed      { get; set; }

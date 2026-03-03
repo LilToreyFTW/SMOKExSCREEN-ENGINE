@@ -23,8 +23,12 @@
     <Compile Remove="HardwareId.cs" />
     <Compile Remove="Theme.cs" />
     <Compile Remove="EnginePage.cs" />
+    <!-- # ADDED: Consolidated excludes for GUI/WinForms-only files -->
     <Compile Remove="ClerkAuth.cs" />
     <Compile Remove="MsPingStatus.cs" />
+    <Compile Remove="SplashScreen.cs" />
+    <Compile Remove="PythonProcessManager.cs" />
+    <Compile Remove="VersionChecker.cs" />
   </ItemGroup>
 
   <ItemGroup>

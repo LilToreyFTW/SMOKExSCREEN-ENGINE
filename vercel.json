@@ -1,7 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
+  "name": "smokescreen-engine",
   "buildCommand": "next build",
+  "devCommand": "npm run dev",
   "installCommand": "npm install",
   "crons": [
     {
