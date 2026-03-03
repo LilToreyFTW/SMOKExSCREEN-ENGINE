@@ -73,6 +73,19 @@ SmokeScreen ENGINE is a comprehensive gaming enhancement platform featuring **Re
 - **📊 API SERVICE STATUS** - System health monitoring
 - **👤 ACCOUNT Tab** - User profile and settings
 
+### **🎮 PS5 Controller System (JoyShockLibrary)**
+- **RT trigger** – Recoil activation on aim
+- **6 advanced recoil patterns** – Game-specific compensation
+- **Gyro aiming** – Motion sensor assistance
+- **Adaptive triggers & haptics** – Tactile feedback
+- **PS5ControllerManager.cs** – DualSense session management
+- **PS5RecoilIntegration.cs** – Recoil compensation; **PS5RecoilConfig.cs** – Configuration UI
+
+### **📡 Wireless Receiver & Live User Dashboard**
+- **WirelessReceiver.cs** – Session management and tracking
+- **LiveUserDashboard.cs** – Real-time updates (IP, computer name, online status)
+- **Heartbeat** – Active session monitoring
+
 ---
 
 ## 🎯 Recoil Key System

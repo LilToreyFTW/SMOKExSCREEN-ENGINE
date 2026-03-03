@@ -73,7 +73,7 @@ export default function DownloadPage() {
             href="https://dotnet.microsoft.com/download/dotnet/8.0"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-[#512BD4] hover:bgurple-600 px-6 py-3 rounded-lg font-bold text-lg transition-colors"
+            className="inline-block bg-[#512BD4] hover:bg-purple-600 px-6 py-3 rounded-lg font-bold text-lg transition-colors"
           >
             Download .NET 8.0 Runtime
           </a>
@@ -94,6 +94,23 @@ export default function DownloadPage() {
           </ol>
         </div>
 
+        {/* PS5 Controller Integration */}
+        <div className="bg-[#11161c] p-8 rounded-2xl border-2 border-[#006FCD] mb-8">
+          <h3 className="font-bold mb-4 text-xl">🎮 PS5 Controller (DualSense) Integration</h3>
+          <p className="text-gray-400 mb-4">
+            SmokeScreen ENGINE supports PlayStation 5 DualSense controllers via JoyShockLibrary for recoil and gyro.
+          </p>
+          <ul className="text-gray-300 space-y-2 mb-4">
+            <li>✓ <strong>RT trigger</strong> – Recoil activation on aim</li>
+            <li>✓ <strong>6 advanced recoil patterns</strong> – Game-specific compensation</li>
+            <li>✓ <strong>Gyro aiming</strong> – Motion sensor assistance</li>
+            <li>✓ <strong>Adaptive triggers & haptics</strong> – Tactile feedback</li>
+          </ul>
+          <p className="text-gray-500 text-sm">
+            Use the ENGINE <strong>PS5 / Recoil</strong> tab to configure patterns and test. Requires a valid license key.
+          </p>
+        </div>
+
         {/* Features */}
         <div className="bg-[#11161c] p-8 rounded-2xl border border-gray-800 mb-8">
           <h3 className="font-bold mb-4 text-xl">✨ Features</h3>
@@ -106,10 +123,10 @@ export default function DownloadPage() {
               <li>✓ Marketplace access</li>
             </ul>
             <ul className="space-y-2">
-              <li>✓ AI Inference Layer</li>
-              <li>✓ Global CDN (42 nodes)</li>
-              <li>✓ API Gateway</li>
-              <li>✓ DevOps deployments</li>
+              <li>✓ PS5 DualSense (JoyShockLibrary)</li>
+              <li>✓ Live user dashboard & wireless receiver</li>
+              <li>✓ Key redemption & tab reload</li>
+              <li>✓ API Gateway & DevOps</li>
               <li>✓ Workflow automation</li>
             </ul>
           </div>
