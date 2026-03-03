@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { getPool, query } from '@/lib/db';
 
 const TSYNC_SECRET = process.env.TSYNC_SECRET || 'tsasync-key-2025-02-27-a7f3c9e1';
 
@@ -42,7 +42,8 @@ export async function POST(req: NextRequest) {
   if (rawKeys.length === 0) {
     return NextResponse.json({ ok: true, inserted: 0 });
   }
-  const pool = (await import('@/lib/db')).getPool();
+  // # UPDATED VERSION: avoid dynamic import so @/* path resolution works consistently in build
+  const pool = getPool();
   if (!pool) {
     return NextResponse.json({ ok: false, message: 'Database not configured' }, { status: 503 });
   }
