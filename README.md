@@ -525,11 +525,11 @@ pm2 restart bot-app
 - **Feature Requests** - feedback.smokex-screen.com
 
 ### **🌐 Official Links**
-- **Website**: https://smokex-screen.com
-- **Discord**: https://discord.gg/smokex-screen
-- **GitHub**: https://github.com/smokex-screen
-- **Twitter**: @SmokeScreenENG
-- **YouTube**: youtube.com/@SmokeScreenENG
+- **Website**: https://smok-ex-screen-engine.vercel.app/
+- **Discord**: [https://discord.gg/smokex-screen](https://discord.gg/mGmXYPC4mY)
+- **GitHub**: [https://github.com/smokex-screen](https://github.com/LilToreyFTW)
+- **Twitter**: [@SmokeScreenENG](https://x.com/SmokescreenEng)
+- **YouTube**: https://www.youtube.com/@BLOWDART2026
 
 ---
 
